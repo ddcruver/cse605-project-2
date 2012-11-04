@@ -1,4 +1,5 @@
-public class InterceptClass implements InterceptInterface {
+public class InterceptedClass implements InterceptInterface {
+
 	@Override
 	public String foo() {
 		return "foo";

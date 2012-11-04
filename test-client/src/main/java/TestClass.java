@@ -8,6 +8,11 @@ public class TestClass {
 		System.out.println("SUCCESS");
 	}
 
+
+	public void interceptMethod() {
+
+	}
+
 	public static void main(String[] args) {
 
 	}
