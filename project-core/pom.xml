@@ -9,14 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>test-client</artifactId>
+    <artifactId>project-core</artifactId>
 
 
-    <dependencies>
-        <dependency>
-            <groupId>edu.buffalo.cse.cse605</groupId>
-            <artifactId>common</artifactId>
-            <version>1.0</version>
-        </dependency>
-    </dependencies>
 </project>

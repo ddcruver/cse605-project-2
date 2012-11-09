@@ -1,7 +1,7 @@
 public interface InterceptInterface {
 
-	public String foo();
+    public String foo();
 
-	public String bar();
+    public String bar();
 
 }
