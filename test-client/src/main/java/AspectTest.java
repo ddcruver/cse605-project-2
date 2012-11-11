@@ -1,5 +1,7 @@
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
 
@@ -12,6 +14,8 @@ import java.util.concurrent.Future;
 
 public class AspectTest {
 
+	private static final transient Logger LOG = LoggerFactory.getLogger(AspectTest.class);
+	
     private ThreadPoolTaskExecutor executor;
 
     private AspectTest(ThreadPoolTaskExecutor executor) {
@@ -20,7 +24,7 @@ public class AspectTest {
     }
 
     public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
-        System.out.println("before");
+        LOG.debug("before");
 
         MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
 
@@ -42,7 +46,7 @@ public class AspectTest {
         Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                System.out.printf("Giving to real obj");
+                LOG.debug("Giving to real obj");
 
                 // now we need to translate that to the real method call, on the hopefully completed real object
 
@@ -68,7 +72,7 @@ public class AspectTest {
             }
         });
 
-        System.out.println("After returned fake obj");
+        LOG.debug("After returned fake obj");
 
         return proxyObj;
 
