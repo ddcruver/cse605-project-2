@@ -9,7 +9,7 @@
           lazy-init="true">
         <property name="corePoolSize" value="5"/>
         <property name="maxPoolSize" value="10"/>
-        <property name="queueCapacity" value="25"/>
+        <property name="queueCapacity" value="2500"/>
     </bean>
 
     <bean id="aspect" class="edu.buffalo.cse.cse605.project2.FuturableAspect">
