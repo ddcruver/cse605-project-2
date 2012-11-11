@@ -24,7 +24,7 @@ public class AspectTest {
     }
 
     public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
-        LOG.debug("before");
+        LOG.debug("Before");
 
         MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
 

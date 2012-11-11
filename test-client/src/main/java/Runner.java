@@ -10,7 +10,8 @@ public class Runner {
 	
 	private static final transient Logger LOG = LoggerFactory.getLogger(Runner.class);
 	
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+    	LOG.info("Creating Application Context");
         ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
 
         TestClass bean = context.getBean("callingClass", TestClass.class);
@@ -20,11 +21,14 @@ public class Runner {
 
         InterceptAnnotationTest test = context.getBean("testAnnotationInterception", InterceptAnnotationTest.class);
 
+        LOG.debug("Calling future method");
         List<String> list = test.getList();
+        LOG.debug("Returning from future method");
         
         LOG.info("Returned list: {}", list);
 
         ((ConfigurableApplicationContext) context).close();
-
+        
+        LOG.debug("Runner Done");
     }
 }

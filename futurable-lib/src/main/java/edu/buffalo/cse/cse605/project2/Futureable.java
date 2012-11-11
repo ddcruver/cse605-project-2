@@ -5,7 +5,5 @@ package edu.buffalo.cse.cse605.project2;
  * User: jmlogan
  * Date: 11/9/12
  * Time: 2:41 PM
- * To change this template use File | Settings | File Templates.
  */
-public @interface Futureable {
-}
+public @interface Futureable {}
