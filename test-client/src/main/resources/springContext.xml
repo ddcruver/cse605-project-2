@@ -5,11 +5,6 @@
 
     <import resource="futurable-context.xml"/>
 
-    <bean id="interceptingClass" class="InterceptedClass"/>
-
     <bean id="testAnnotationInterception" class="InterceptAnnotationTest"/>
 
-    <bean id="callingClass" class="TestClass">
-        <constructor-arg ref="interceptingClass"/>
-    </bean>
 </beans>
