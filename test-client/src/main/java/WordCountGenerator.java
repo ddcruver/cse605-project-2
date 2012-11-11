@@ -1,14 +1,14 @@
 import edu.buffalo.cse.cse605.project2.Futureable;
-import sun.java2d.xr.MutableInteger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WordCountGenerator {
 
     @Futureable
-    public Map<String, MutableInteger> generateWordCount(String inputText) {
-        Map<String, MutableInteger> returnMap = new HashMap<String, MutableInteger>();
+    public Map<String, AtomicInteger> generateWordCount(String inputText) {
+        Map<String, AtomicInteger> returnMap = new HashMap<String, AtomicInteger>();
 
         inputText = inputText.replaceAll("\\p{P}", " ");
         inputText = inputText.toLowerCase();
@@ -18,14 +18,14 @@ public class WordCountGenerator {
             if (chunk.length() == 0)
                 continue;
 
-            MutableInteger integer = returnMap.get(chunk);
+            AtomicInteger integer = returnMap.get(chunk);
 
             if (integer == null) {
-                integer = new MutableInteger(0);
+                integer = new AtomicInteger(0);
                 returnMap.put(chunk, integer);
             }
 
-            integer.setValue(integer.getValue() + 1);
+            integer.incrementAndGet();
         }
 
         return returnMap;
