@@ -18,6 +18,7 @@ public class Runner {
 
         LOG.debug("Calling future method");
         List<String> list = test.getList();
+        
         LOG.debug("Returning from future method");
         
         LOG.info("Returned list: {}", list);

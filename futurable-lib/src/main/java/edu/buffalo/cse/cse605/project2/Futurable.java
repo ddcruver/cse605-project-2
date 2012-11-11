@@ -6,4 +6,4 @@ package edu.buffalo.cse.cse605.project2;
  * Date: 11/9/12
  * Time: 2:41 PM
  */
-public @interface Futureable {}
+public @interface Futurable {}
