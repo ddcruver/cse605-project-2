@@ -13,7 +13,7 @@
         <constructor-arg ref="interceptingClass"/>
     </bean>
     
-    <bean id="aspect" class="AspectTest">
+    <bean id="aspect" class="edu.buffalo.cse.cse605.project2.FuturableAspect">
         <constructor-arg ref="defaultFuturePool"/>
     </bean>    
 </beans>

@@ -1,3 +1,5 @@
+package edu.buffalo.cse.cse605.project2;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -12,13 +14,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class AspectTest {
+public class FuturableAspect {
 
-	private static final transient Logger LOG = LoggerFactory.getLogger(AspectTest.class);
+	private static final transient Logger LOG = LoggerFactory.getLogger(FuturableAspect.class);
 	
     private ThreadPoolTaskExecutor executor;
 
-    private AspectTest(ThreadPoolTaskExecutor executor) {
+    private FuturableAspect(ThreadPoolTaskExecutor executor) {
 
         this.executor = executor;
     }
