@@ -1,9 +1,10 @@
+import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
+import com.google.common.io.LineProcessor;
 import edu.buffalo.cse.cse605.project2.Futureable;
-import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,32 +12,48 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WordCountGenerator {
 
     @Futureable
-    public Map<String, AtomicInteger> generateWordCount(InputStream inputStream) throws IOException {
+    public Map<String, AtomicInteger> generateWordCount(final InputStream inputStream) throws IOException {
 
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(inputStream, writer, "UTF-8");
-        String inputText= writer.toString();
+        InputSupplier inputSupplier = new InputSupplier<InputStream>() {
+            public InputStream getInput() throws IOException {
+                return inputStream;
+            }
+        };
 
-        Map<String, AtomicInteger> returnMap = new HashMap<String, AtomicInteger>();
+        return CharStreams.readLines(inputSupplier, new WordCountLineProcessor());
+    }
 
-        inputText = inputText.replaceAll("\\p{P}", " ");
-        inputText = inputText.toLowerCase();
 
-        for (String chunk : inputText.split(" ")) {
-            chunk = chunk.trim();
-            if (chunk.length() == 0)
-                continue;
+    private class WordCountLineProcessor implements LineProcessor<Map<String, AtomicInteger>> {
 
-            AtomicInteger integer = returnMap.get(chunk);
+        private Map<String, AtomicInteger> resultingMap = new HashMap<String, AtomicInteger>();
 
-            if (integer == null) {
-                integer = new AtomicInteger(0);
-                returnMap.put(chunk, integer);
+        @Override
+        public boolean processLine(String inputText) throws IOException {
+            inputText = inputText.replaceAll("\\p{P}", " ");
+            inputText = inputText.toLowerCase();
+
+            for (String chunk : inputText.split(" ")) {
+                chunk = chunk.trim();
+                if (chunk.length() == 0)
+                    continue;
+
+                AtomicInteger integer = resultingMap.get(chunk);
+
+                if (integer == null) {
+                    integer = new AtomicInteger(0);
+                    resultingMap.put(chunk, integer);
+                }
+
+                integer.incrementAndGet();
             }
 
-            integer.incrementAndGet();
+            return true;
         }
 
-        return returnMap;
+        @Override
+        public Map<String, AtomicInteger> getResult() {
+            return resultingMap;
+        }
     }
 }
