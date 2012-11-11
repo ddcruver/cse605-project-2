@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:aop="http://www.springframework.org/schema/aop"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-	<bean id="defaultFuturePool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" lazy-init="true">
+    <bean id="defaultFuturePool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"
+          lazy-init="true">
         <property name="corePoolSize" value="5"/>
         <property name="maxPoolSize" value="10"/>
         <property name="queueCapacity" value="25"/>
     </bean>
 
-	<aop:config>
+    <bean id="aspect" class="edu.buffalo.cse.cse605.project2.FuturableAspect">
+        <constructor-arg ref="defaultFuturePool"/>
+    </bean>
+
+    <aop:config>
         <aop:aspect ref="aspect">
             <aop:pointcut id="point" expression="execution(@edu.buffalo.cse.cse605.project2.Futureable * *.*(..))"/>
             <aop:around pointcut-ref="point" method="wrapAround"/>
