@@ -46,7 +46,7 @@ public class AspectTest {
         Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                LOG.debug("Giving to real obj");
+                LOG.debug("Giving to real object");
 
                 // now we need to translate that to the real method call, on the hopefully completed real object
 
@@ -72,7 +72,7 @@ public class AspectTest {
             }
         });
 
-        LOG.debug("After returned fake obj");
+        LOG.debug("After returned fake object");
 
         return proxyObj;
 
