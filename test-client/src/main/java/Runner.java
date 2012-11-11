@@ -14,11 +14,6 @@ public class Runner {
     	LOG.info("Creating Application Context");
         ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
 
-        TestClass bean = context.getBean("callingClass", TestClass.class);
-        InterceptInterface intercept = context.getBean("interceptingClass", InterceptInterface.class);
-
-        LOG.info("Returned value: {}", intercept.foo());
-
         InterceptAnnotationTest test = context.getBean("testAnnotationInterception", InterceptAnnotationTest.class);
 
         LOG.debug("Calling future method");
