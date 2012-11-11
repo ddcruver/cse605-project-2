@@ -3,13 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>common</artifactId>
-        <groupId>edu.buffalo.cse.cse605</groupId>
-        <version>1.0</version>
+        <artifactId>project-2-parent</artifactId>
+        <groupId>edu.buffalo.cse.cse605.project2</groupId>
+        <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>project-core</artifactId>
-
+    <artifactId>futurable-lib</artifactId>
 
 </project>
