@@ -7,7 +7,6 @@ public class InterceptAnnotationTest {
 
     @Futureable
     public List<String> getList() throws InterruptedException {
-    	Thread.sleep(2000);
         return Arrays.asList("hello", "world");
     }
 }
