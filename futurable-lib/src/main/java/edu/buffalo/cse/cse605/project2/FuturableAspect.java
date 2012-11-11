@@ -4,6 +4,10 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
 
@@ -14,22 +18,36 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class FuturableAspect {
-
+public class FuturableAspect implements ApplicationContextAware
+{
 	private static final transient Logger LOG = LoggerFactory.getLogger(FuturableAspect.class);
 	
-    private ThreadPoolTaskExecutor executor;
+    private AsyncTaskExecutor defaultExecutor;
 
-    private FuturableAspect(ThreadPoolTaskExecutor executor) {
+	private ApplicationContext applicationContext;
 
-        this.executor = executor;
+    private FuturableAspect(AsyncTaskExecutor executor) {
+        defaultExecutor = executor;
     }
 
     public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
         LOG.debug("Before");
 
-        MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
+        final MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
+        Method method = signature.getMethod();
+        Futurable futurableAnnotation = method.getAnnotation(Futurable.class);
+        String executorName = futurableAnnotation.executor();
+       
+        AsyncTaskExecutor executor;
         
+        if(executorName.equals(FuturableConstants.DEFAULT_TASK_EXECUTOR))
+        {
+        	executor = defaultExecutor;
+        }
+        else
+        {
+        	executor = applicationContext.getBean(executorName, ThreadPoolTaskExecutor.class);
+        }
         
         final Future<Object> future = executor.submit(new Callable<Object>() {
             @Override
@@ -80,4 +98,9 @@ public class FuturableAspect {
         return proxyObj;
 
     }
+
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		applicationContext = context;
+	}
 }

@@ -9,4 +9,9 @@ public class InterceptAnnotationTest {
     public List<String> getList() throws InterruptedException {
         return Arrays.asList("hello", "world");
     }
+    
+    @Futurable(executor="userDefinedExecutor")
+    public List<String> getOtherList() throws InterruptedException {
+    	return Arrays.asList("hello2", "world2");
+    }
 }

@@ -5,14 +5,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-    <bean id="defaultFuturePool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" lazy-init="true">
+    <bean id="defaultFuturablePool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" lazy-init="true">
         <property name="corePoolSize" value="5"/>
         <property name="maxPoolSize" value="10"/>
         <property name="queueCapacity" value="25"/>
     </bean>
 
     <bean id="aspect" class="edu.buffalo.cse.cse605.project2.FuturableAspect">
-        <constructor-arg ref="defaultFuturePool"/>
+        <constructor-arg ref="defaultFuturablePool"/>
     </bean>
 
     <aop:config>

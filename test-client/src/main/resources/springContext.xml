@@ -5,6 +5,12 @@
 
     <import resource="futurable-context.xml"/>
 
+	<bean id="userDefinedExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" lazy-init="true">
+        <property name="corePoolSize" value="5"/>
+        <property name="maxPoolSize" value="10"/>
+        <property name="queueCapacity" value="25"/>
+    </bean>
+    
     <bean id="testAnnotationInterception" class="InterceptAnnotationTest"/>
 
 </beans>

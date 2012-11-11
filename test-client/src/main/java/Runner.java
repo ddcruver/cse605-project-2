@@ -23,6 +23,10 @@ public class Runner {
         
         LOG.info("Returned list: {}", list);
 
+        List<String> list2 = test.getOtherList();
+        
+        LOG.info("Other returned list: {}", list2);
+        
         ((ConfigurableApplicationContext) context).close();
         
         LOG.debug("Runner Done");
