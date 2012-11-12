@@ -3,15 +3,15 @@ package edu.buffalo.cse.cse605.project2;
 import java.util.Arrays;
 import java.util.List;
 
-public class FuterableTestClass {
+public class FuturableTestClass {
 
-	@Futurable
+    @Futurable
     public List<String> getList() throws InterruptedException {
         return Arrays.asList("hello", "world");
     }
-    
-    @Futurable(executor="userDefinedExecutor")
+
+    @Futurable(executor = "userDefinedExecutor")
     public List<String> getOtherList() throws InterruptedException {
-    	return Arrays.asList("hello2", "world2");
+        return Arrays.asList("hello2", "world2");
     }
 }
