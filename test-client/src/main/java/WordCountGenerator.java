@@ -1,12 +1,11 @@
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 import com.google.common.io.LineProcessor;
-import edu.buffalo.cse.cse605.project2.Futureable;
+
+import edu.buffalo.cse.cse605.project2.Futurable;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WordCountGenerator {
 
-    @Futureable
+    @Futurable
     public Map<String, AtomicInteger> generateWordCount(final File inputStream) throws IOException {
 
         return CharStreams.readLines(Files.newReaderSupplier(inputStream, Charset.defaultCharset()), new WordCountLineProcessor());
