@@ -13,4 +13,6 @@
     
     <bean id="testAnnotationInterception" class="InterceptAnnotationTest"/>
 
+    <bean id="wordCountGenerator" class="WordCountGenerator" />
+
 </beans>
