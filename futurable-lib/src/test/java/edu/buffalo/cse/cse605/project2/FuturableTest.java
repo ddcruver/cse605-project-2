@@ -19,11 +19,12 @@ public class FuturableTest {
 	private static final transient Logger LOG = LoggerFactory.getLogger(FuturableTest.class);
 	
 	@Autowired
-	private FuterableTestClass futurable;
+	private FuturableTestClass futurable;
 
 	@Test
 	public void testDefaultExecutor() throws InterruptedException {
 		List<String> list = futurable.getList();
+		list.subList(1,1);
 		LOG.info("List Contents: {}", list);
 		assertEquals(2, list.size());
 	}
@@ -31,6 +32,7 @@ public class FuturableTest {
 	@Test
 	public void testUserDefinedExecutor() throws InterruptedException {
 		List<String> list = futurable.getOtherList();
+		list.subList(1,1);
 		LOG.info("List Contents: {}", list);
 		assertEquals(2, list.size());
 	}

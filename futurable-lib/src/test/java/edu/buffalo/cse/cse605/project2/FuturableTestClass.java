@@ -3,7 +3,7 @@ package edu.buffalo.cse.cse605.project2;
 import java.util.Arrays;
 import java.util.List;
 
-public class FuterableTestClass {
+public class FuturableTestClass {
 
 	@Futurable
     public List<String> getList() throws InterruptedException {

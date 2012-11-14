@@ -64,7 +64,7 @@ public class FuturableAspect implements ApplicationContextAware
         final Class<?> classToEmulate = signature.getClass().getClassLoader().loadClass(signature.getReturnType().getName());
         Class<?>[] classes = {classToEmulate};
 
-        Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, new InvocationHandler() {
+        final Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 LOG.debug("Giving to real object");
@@ -89,7 +89,17 @@ public class FuturableAspect implements ApplicationContextAware
                 Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
 
                 // call it and return it
-                return methodObj.invoke(realObject, adjustedArgs);
+                Object returnValue = null;
+                
+                try
+                {
+                	methodObj.setAccessible(true);
+                	returnValue = methodObj.invoke(realObject, adjustedArgs);
+                } catch(Exception ex)
+                {
+                	LOG.error("Caught exception.", ex);
+                }
+                return returnValue;
             }
         });
 
