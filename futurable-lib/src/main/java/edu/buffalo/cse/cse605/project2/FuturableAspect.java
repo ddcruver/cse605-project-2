@@ -18,13 +18,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class FuturableAspect implements ApplicationContextAware
-{
-	private static final transient Logger LOG = LoggerFactory.getLogger(FuturableAspect.class);
-	
+public class FuturableAspect implements ApplicationContextAware {
+    private static final transient Logger LOG = LoggerFactory.getLogger(FuturableAspect.class);
+
     private AsyncTaskExecutor defaultExecutor;
 
-	private ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     private FuturableAspect(AsyncTaskExecutor executor) {
         defaultExecutor = executor;
@@ -37,18 +36,15 @@ public class FuturableAspect implements ApplicationContextAware
         Method method = signature.getMethod();
         Futurable futurableAnnotation = method.getAnnotation(Futurable.class);
         String executorName = futurableAnnotation.executor();
-       
+
         AsyncTaskExecutor executor;
-        
-        if(executorName.equals(FuturableConstants.DEFAULT_TASK_EXECUTOR))
-        {
-        	executor = defaultExecutor;
+
+        if (executorName.equals(FuturableConstants.DEFAULT_TASK_EXECUTOR)) {
+            executor = defaultExecutor;
+        } else {
+            executor = applicationContext.getBean(executorName, ThreadPoolTaskExecutor.class);
         }
-        else
-        {
-        	executor = applicationContext.getBean(executorName, ThreadPoolTaskExecutor.class);
-        }
-        
+
         final Future<Object> future = executor.submit(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
@@ -109,8 +105,8 @@ public class FuturableAspect implements ApplicationContextAware
 
     }
 
-	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
-		applicationContext = context;
-	}
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        applicationContext = context;
+    }
 }
