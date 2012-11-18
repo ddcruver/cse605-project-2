@@ -33,7 +33,7 @@ public class FuturableAspect implements ApplicationContextAware {
     Object realObject;
     boolean wasCompleted = false;
 
-    public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
+    public Object interceptFuturableMethod(final ProceedingJoinPoint pjp) throws Throwable {
         LOG.debug("Before");
 
         final MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
@@ -129,5 +129,9 @@ public class FuturableAspect implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
         applicationContext = context;
+    }
+
+    public Object interceptFuturableQueue(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        return null;  //To change body of created methods use File | Settings | File Templates.
     }
 }
