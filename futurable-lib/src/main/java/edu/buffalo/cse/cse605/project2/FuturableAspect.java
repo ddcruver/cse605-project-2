@@ -1,5 +1,6 @@
 package edu.buffalo.cse.cse605.project2;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -91,9 +93,18 @@ public class FuturableAspect implements ApplicationContextAware {
                 {
                 	methodObj.setAccessible(true);
                 	returnValue = methodObj.invoke(realObject, adjustedArgs);
+                	
                 } catch(Exception ex)
                 {
                 	LOG.error("Caught exception.", ex);
+                	Type[] validExceptions = methodObj.getGenericExceptionTypes();
+                	for(Type exceptionType : validExceptions)
+                	{
+                		if(ClassUtils.isAssignable(ex.getClass(), exceptionType.getClass()))
+                		{
+                			throw ex;
+                		}
+                	}
                 }
                 return returnValue;
             }
