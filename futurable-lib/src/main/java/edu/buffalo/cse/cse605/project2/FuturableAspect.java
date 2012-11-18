@@ -1,6 +1,5 @@
 package edu.buffalo.cse.cse605.project2;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -15,7 +14,6 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,6 +28,10 @@ public class FuturableAspect implements ApplicationContextAware {
     private FuturableAspect(AsyncTaskExecutor executor) {
         defaultExecutor = executor;
     }
+
+
+    Object realObject;
+    boolean wasCompleted = false;
 
     public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
         LOG.debug("Before");
@@ -47,7 +49,7 @@ public class FuturableAspect implements ApplicationContextAware {
             executor = applicationContext.getBean(executorName, ThreadPoolTaskExecutor.class);
         }
 
-        final Future<Object> future = executor.submit(new Callable<Object>() {
+        final Callable<Object> callable = new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 try {
@@ -57,7 +59,9 @@ public class FuturableAspect implements ApplicationContextAware {
                     throw new ExecutionException(e);
                 }
             }
-        });
+        };
+
+        final Future<Object> future = executor.submit(callable);
 
         final Class<?> classToEmulate = signature.getClass().getClassLoader().loadClass(signature.getReturnType().getName());
         Class<?>[] classes = {classToEmulate};
@@ -73,8 +77,25 @@ public class FuturableAspect implements ApplicationContextAware {
 
                 Object[] adjustedArgs = (args == null) ? new Object[0] : args;
 
-                Object realObject;
 
+                try {
+                    wasCompleted = true;
+                    // if it hasn't started executing yet, and we need the results, execute it in the current thread instead
+                    if (!future.isDone() && future.cancel(false)) {
+                        realObject = callable.call();
+                    } else {
+                        try {
+                            realObject = future.get();
+                        } catch (InterruptedException e) {
+                            wasCompleted = false;
+                            throw e.getCause();
+                        }
+                    }
+                } catch (ExecutionException e) {
+                    throw e.getCause();
+                } catch (InterruptedException e) {
+                    throw new IllegalStateException(e);
+                }
                 try {
                     realObject = future.get();
                 } catch (ExecutionException e) {
@@ -88,23 +109,12 @@ public class FuturableAspect implements ApplicationContextAware {
 
                 // call it and return it
                 Object returnValue = null;
-                
-                try
-                {
-                	methodObj.setAccessible(true);
-                	returnValue = methodObj.invoke(realObject, adjustedArgs);
-                	
-                } catch(Exception ex)
-                {
-                	LOG.error("Caught exception.", ex);
-                	Type[] validExceptions = methodObj.getGenericExceptionTypes();
-                	for(Type exceptionType : validExceptions)
-                	{
-                		if(ClassUtils.isAssignable(ex.getClass(), exceptionType.getClass()))
-                		{
-                			throw ex;
-                		}
-                	}
+
+                try {
+                    methodObj.setAccessible(true);
+                    returnValue = methodObj.invoke(realObject, adjustedArgs);
+                } catch (Exception ex) {
+                    LOG.error("Caught exception.", ex);
                 }
                 return returnValue;
             }
