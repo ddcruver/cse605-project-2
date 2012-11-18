@@ -29,6 +29,10 @@ public class FuturableAspect implements ApplicationContextAware {
         defaultExecutor = executor;
     }
 
+
+    Object realObject;
+    boolean wasCompleted = false;
+
     public Object wrapAround(final ProceedingJoinPoint pjp) throws Throwable {
         LOG.debug("Before");
 
@@ -45,7 +49,7 @@ public class FuturableAspect implements ApplicationContextAware {
             executor = applicationContext.getBean(executorName, ThreadPoolTaskExecutor.class);
         }
 
-        final Future<Object> future = executor.submit(new Callable<Object>() {
+        final Callable<Object> callable = new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 try {
@@ -55,7 +59,9 @@ public class FuturableAspect implements ApplicationContextAware {
                     throw new ExecutionException(e);
                 }
             }
-        });
+        };
+
+        final Future<Object> future = executor.submit(callable);
 
         final Class<?> classToEmulate = signature.getClass().getClassLoader().loadClass(signature.getReturnType().getName());
         Class<?>[] classes = {classToEmulate};
@@ -71,8 +77,25 @@ public class FuturableAspect implements ApplicationContextAware {
 
                 Object[] adjustedArgs = (args == null) ? new Object[0] : args;
 
-                Object realObject;
 
+                try {
+                    wasCompleted = true;
+                    // if it hasn't started executing yet, and we need the results, execute it in the current thread instead
+                    if (!future.isDone() && future.cancel(false)) {
+                        realObject = callable.call();
+                    } else {
+                        try {
+                            realObject = future.get();
+                        } catch (InterruptedException e) {
+                            wasCompleted = false;
+                            throw e.getCause();
+                        }
+                    }
+                } catch (ExecutionException e) {
+                    throw e.getCause();
+                } catch (InterruptedException e) {
+                    throw new IllegalStateException(e);
+                }
                 try {
                     realObject = future.get();
                 } catch (ExecutionException e) {
@@ -86,14 +109,12 @@ public class FuturableAspect implements ApplicationContextAware {
 
                 // call it and return it
                 Object returnValue = null;
-                
-                try
-                {
-                	methodObj.setAccessible(true);
-                	returnValue = methodObj.invoke(realObject, adjustedArgs);
-                } catch(Exception ex)
-                {
-                	LOG.error("Caught exception.", ex);
+
+                try {
+                    methodObj.setAccessible(true);
+                    returnValue = methodObj.invoke(realObject, adjustedArgs);
+                } catch (Exception ex) {
+                    LOG.error("Caught exception.", ex);
                 }
                 return returnValue;
             }
