@@ -150,10 +150,9 @@ public class FuturableAspect implements ApplicationContextAware {
         applicationContext = context;
     }
 
-    private Map<Object, Future<?>> proxyToFutureMap = new MapMaker()./*weakKeys().weakValues().*/makeMap();
+    private Map<Object, Future<?>> proxyToFutureMap = new MapMaker().weakKeys().weakValues().makeMap();
 
     public Object interceptFuturableQueue(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-
         Queue originalQueue = (Queue) proceedingJoinPoint.proceed();
 
         // need to go from proxy -> future
