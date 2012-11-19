@@ -9,6 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
+import java.util.Queue;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,10 +17,10 @@ import static org.junit.Assert.assertEquals;
 @ContextConfiguration(locations = "/futurable-test-context.xml")
 public class FuturableTest {
 
-	private static final transient Logger LOG = LoggerFactory.getLogger(FuturableTest.class);
-	
-	@Autowired
-	private FuturableTestClass futurable;
+    private static final transient Logger LOG = LoggerFactory.getLogger(FuturableTest.class);
+
+    @Autowired
+    private FuturableTestClass futurable;
 
     @Test
     public void testDefaultExecutor() throws InterruptedException {
@@ -35,4 +36,19 @@ public class FuturableTest {
         assertEquals(2, list.size());
     }
 
+    @Test
+    public void testWastingTime() throws Exception {
+
+        futurable.wasteSomeTime(2);
+    }
+
+    @Test
+    public void testQueue() throws Exception {
+        Queue<List<String>> queue = futurable.wasteALotOfTime(3);
+
+        assert queue.remove().size() == 1;
+        assert queue.remove().size() == 2;
+        assert queue.remove().size() == 3;
+
+    }
 }

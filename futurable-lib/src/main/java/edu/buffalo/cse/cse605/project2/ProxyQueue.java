@@ -6,9 +6,9 @@ import java.util.concurrent.Future;
 
 public class ProxyQueue<T> implements Queue<T> {
 
-    private final List<Future<T>> futureList;
+    private final List<Future<? extends T>> futureList;
 
-    ProxyQueue(List<Future<T>> futureList) {
+    ProxyQueue(List<Future<? extends T>> futureList) {
 
         this.futureList = futureList;
     }
@@ -16,7 +16,7 @@ public class ProxyQueue<T> implements Queue<T> {
     @Override
     public T remove() {
         while (true) {
-            for (Future<T> aFuture : futureList) {
+            for (Future<? extends T> aFuture : futureList) {
                 if (aFuture.isDone()) {
                     try {
                         return aFuture.get();
@@ -30,6 +30,13 @@ public class ProxyQueue<T> implements Queue<T> {
             if (futureList.isEmpty()) {
                 throw new NoSuchElementException("Queue is empty!");
             }
+
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
         }
 
     }
@@ -52,7 +59,7 @@ public class ProxyQueue<T> implements Queue<T> {
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
-            private List<Future<T>> iteratorList = new ArrayList<Future<T>>(futureList);
+            private List<Future<? extends T>> iteratorList = new ArrayList<Future<? extends T>>(futureList);
 
             @Override
             public boolean hasNext() {
@@ -62,7 +69,7 @@ public class ProxyQueue<T> implements Queue<T> {
             @Override
             public T next() {
                 while (true) {
-                    for (Future<T> future : iteratorList) {
+                    for (Future<? extends T> future : iteratorList) {
                         if (future.isDone()) {
                             try {
                                 return future.get();
@@ -95,7 +102,7 @@ public class ProxyQueue<T> implements Queue<T> {
 
     @Override
     public void clear() {
-        for (Future<T> future : futureList) {
+        for (Future<? extends T> future : futureList) {
             future.cancel(true);
         }
     }
@@ -106,7 +113,7 @@ public class ProxyQueue<T> implements Queue<T> {
     }
 
     @Override
-    public <T1 extends Object> T1[] toArray(T1[] a) {
+    public <T1> T1[] toArray(T1[] a) {
         throw new UnsupportedOperationException("This method is not implemented.");
     }
 

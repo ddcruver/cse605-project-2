@@ -20,10 +20,12 @@
         <aop:aspect ref="aspect">
             <aop:pointcut id="point" expression="execution(@edu.buffalo.cse.cse605.project2.Futurable * *.*(..))"/>
             <aop:around pointcut-ref="point" method="interceptFuturableMethod"/>
+        </aop:aspect>
 
+        <aop:aspect ref="aspect">
             <aop:pointcut id="queuePoint"
-                          expression="execution(@edu.buffalo.cse.cse605.project2.FuturableQueue Queue * *.*(..))"/>
-            <aop:around method="interceptFuturableQueue" pointcut-ref="queuePoint"/>
+                          expression="execution(@edu.buffalo.cse.cse605.project2.FuturableQueue java.util.Queue *.*(..))"/>
+            <aop:around pointcut-ref="queuePoint" method="interceptFuturableQueue"/>
         </aop:aspect>
     </aop:config>
 </beans>

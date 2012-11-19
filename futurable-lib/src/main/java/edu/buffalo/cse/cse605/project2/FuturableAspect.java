@@ -1,5 +1,6 @@
 package edu.buffalo.cse.cse605.project2;
 
+import com.google.common.collect.MapMaker;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -14,6 +15,10 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -77,32 +82,32 @@ public class FuturableAspect implements ApplicationContextAware {
 
                 Object[] adjustedArgs = (args == null) ? new Object[0] : args;
 
-
-                try {
-                    wasCompleted = true;
-                    // if it hasn't started executing yet, and we need the results, execute it in the current thread instead
-                    if (!future.isDone() && future.cancel(false)) {
-                        realObject = callable.call();
-                    } else {
-                        try {
-                            realObject = future.get();
-                        } catch (InterruptedException e) {
-                            wasCompleted = false;
-                            throw e.getCause();
+                if (!wasCompleted) {
+                    try {
+                        wasCompleted = true;
+                        // if it hasn't started executing yet, and we need the results, execute it in the current thread instead
+                        if (!future.isDone() && future.cancel(false)) {
+                            LOG.debug("Cancelling the execution of the result, and executing locally.");
+                            realObject = callable.call();
+                        } else {
+                            try {
+                                LOG.debug("Waiting for execution to finish on the thread pool...");
+                                // we throw an ExecutionException, and the Executor will wrap that in another ExecutionException
+                                // we want to expose the real exception cause, so that a client will be able to handle it
+                                realObject = future.get();
+                            } catch (InterruptedException e) {
+                                wasCompleted = false;
+                                throw e;
+                            }
                         }
+                    } catch (ExecutionException e) {
+                        throw e.getCause(); // "unwrap" the execution exception that we threw, and expose the real exception
+                    } catch (InterruptedException e) {
+                        throw new IllegalStateException(e);
                     }
-                } catch (ExecutionException e) {
-                    throw e.getCause();
-                } catch (InterruptedException e) {
-                    throw new IllegalStateException(e);
                 }
-                try {
-                    realObject = future.get();
-                } catch (ExecutionException e) {
-                    throw e.getCause().getCause(); // get rid of the ExecutionException x 2 and expose the original exception
-                } catch (InterruptedException e) {
-                    throw new IllegalStateException(e);
-                }
+
+                assert realObject != null;
 
                 // get the method argument we really want
                 Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
@@ -120,6 +125,8 @@ public class FuturableAspect implements ApplicationContextAware {
             }
         });
 
+        proxyToFutureMap.put(proxyObj, future);
+
         LOG.debug("After returned fake object");
 
         return proxyObj;
@@ -131,7 +138,21 @@ public class FuturableAspect implements ApplicationContextAware {
         applicationContext = context;
     }
 
+    private Map<Object, Future<?>> proxyToFutureMap = new MapMaker().weakKeys().weakValues().makeMap();
+
     public Object interceptFuturableQueue(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        return null;  //To change body of created methods use File | Settings | File Templates.
+
+        Queue originalQueue = (Queue) proceedingJoinPoint.proceed();
+
+        // need to go from proxy -> future
+        List<Future<?>> futureList = new ArrayList<Future<?>>();
+
+        for (Object o : originalQueue) {
+            Future<?> future = proxyToFutureMap.remove(o); // help clean up the map, we will only need this value at most once, just remove it
+            assert future != null : "Future object was not found in the proxy->future map!";
+            futureList.add(future);
+        }
+
+        return new ProxyQueue<Object>(futureList);
     }
 }
