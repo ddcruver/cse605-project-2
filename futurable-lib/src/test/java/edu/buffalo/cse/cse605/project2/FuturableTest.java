@@ -22,6 +22,10 @@ public class FuturableTest {
     @Autowired
     private FuturableTestClass futurable;
 
+    @Autowired
+    private FuturableQueueTestClass queueFuturable;
+
+
     @Test
     public void testDefaultExecutor() throws InterruptedException {
         List<String> list = futurable.getList();
@@ -44,11 +48,34 @@ public class FuturableTest {
 
     @Test
     public void testQueue() throws Exception {
-        Queue<List<String>> queue = futurable.wasteALotOfTime(3);
+        Queue<List<String>> queue = queueFuturable.wasteALotOfTime(3);
 
-        assert queue.remove().size() == 1;
-        assert queue.remove().size() == 2;
-        assert queue.remove().size() == 3;
+        int firstSize = queue.remove().size();
+        int secondSize = queue.remove().size();
+        int thirdSize = queue.remove().size();
+
+        LOG.debug("Returned sizes were {}, {}", Integer.toString(firstSize), Integer.toString(secondSize));
+
+        assert firstSize == 1;
+        assert secondSize == 2;
+        assert thirdSize == 3;
+
+    }
+
+
+    @Test
+    public void testNormalQueue() throws Exception {
+        Queue<List<String>> queue = queueFuturable.wasteALotOfTimeNormally(3);
+
+        int firstSize = queue.remove().size();
+        int secondSize = queue.remove().size();
+        int thirdSize = queue.remove().size();
+
+        LOG.debug("Returned sizes were {}, {}", Integer.toString(firstSize), Integer.toString(secondSize));
+
+        assert firstSize == 3;
+        assert secondSize == 2;
+        assert thirdSize == 1;
 
     }
 }

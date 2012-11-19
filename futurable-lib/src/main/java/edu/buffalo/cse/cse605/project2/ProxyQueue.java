@@ -18,6 +18,8 @@ public class ProxyQueue<T> implements Queue<T> {
         while (true) {
             for (Future<? extends T> aFuture : futureList) {
                 if (aFuture.isDone()) {
+                    futureList.remove(aFuture);
+
                     try {
                         return aFuture.get();
                     } catch (InterruptedException e) {

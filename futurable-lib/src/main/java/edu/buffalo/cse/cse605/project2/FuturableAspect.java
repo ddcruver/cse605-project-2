@@ -35,9 +35,6 @@ public class FuturableAspect implements ApplicationContextAware {
     }
 
 
-    Object realObject;
-    boolean wasCompleted = false;
-
     public Object interceptFuturableMethod(final ProceedingJoinPoint pjp) throws Throwable {
         LOG.debug("Before");
 
@@ -72,22 +69,37 @@ public class FuturableAspect implements ApplicationContextAware {
         Class<?>[] classes = {classToEmulate};
 
         final Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, new InvocationHandler() {
+            Object realObject;
+            boolean wasCompleted = false;
+
+
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                LOG.debug("Giving to real object");
+                String name = method.getName();
+
+
+                // we need this to avoid a stack overflow if we try to remove this object from the map
+                if ("equals".equals(name)) {
+                    return proxy == args[0];
+                } else if ("hashCode".equals(name)) {
+                    return method.hashCode() & this.hashCode();
+                }
+
+                LOG.debug("Giving to real object ({})", name);
 
                 // now we need to translate that to the real method call, on the hopefully completed real object
 
-                String name = method.getName();
 
                 Object[] adjustedArgs = (args == null) ? new Object[0] : args;
 
                 if (!wasCompleted) {
                     try {
-                        wasCompleted = true;
                         // if it hasn't started executing yet, and we need the results, execute it in the current thread instead
-                        if (!future.isDone() && future.cancel(false)) {
+                        if (!future.isDone() && proxyToFutureMap.containsKey(proxy) && future.cancel(false)) {
                             LOG.debug("Cancelling the execution of the result, and executing locally.");
+                            // this is because this is impossible if this method has been claimed by a QueueHandler -- otherwise we won't
+                            // be able to map this with a Future -- it's about to be cancelled!
+                            proxyToFutureMap.remove(proxy);
                             realObject = callable.call();
                         } else {
                             try {
@@ -95,9 +107,8 @@ public class FuturableAspect implements ApplicationContextAware {
                                 // we throw an ExecutionException, and the Executor will wrap that in another ExecutionException
                                 // we want to expose the real exception cause, so that a client will be able to handle it
                                 realObject = future.get();
-                            } catch (InterruptedException e) {
-                                wasCompleted = false;
-                                throw e;
+                            } catch (ExecutionException e) {
+                                throw e.getCause();
                             }
                         }
                     } catch (ExecutionException e) {
@@ -105,6 +116,7 @@ public class FuturableAspect implements ApplicationContextAware {
                     } catch (InterruptedException e) {
                         throw new IllegalStateException(e);
                     }
+                    wasCompleted = true;
                 }
 
                 assert realObject != null;
@@ -138,7 +150,7 @@ public class FuturableAspect implements ApplicationContextAware {
         applicationContext = context;
     }
 
-    private Map<Object, Future<?>> proxyToFutureMap = new MapMaker().weakKeys().weakValues().makeMap();
+    private Map<Object, Future<?>> proxyToFutureMap = new MapMaker()./*weakKeys().weakValues().*/makeMap();
 
     public Object interceptFuturableQueue(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 

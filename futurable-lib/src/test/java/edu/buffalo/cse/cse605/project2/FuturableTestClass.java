@@ -3,7 +3,9 @@ package edu.buffalo.cse.cse605.project2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class FuturableTestClass {
 
@@ -34,22 +36,9 @@ public class FuturableTestClass {
             returnValue.add(Integer.toString(j));
         }
 
-        LOG.debug("Done wasting {} time!", Integer.toString(i));
+        LOG.debug("Done wasting {} time!", returnValue.size());
 
         return returnValue;
     }
 
-    @FuturableQueue
-    public Queue<List<String>> wasteALotOfTime(int count) {
-        Queue<List<String>> returnedQueue = new LinkedList<List<String>>();
-
-
-        for (int i = count; i > 0; i--) {
-            returnedQueue.add(wasteSomeTime(i));
-        }
-
-        LOG.debug("Done wasting all of the time.");
-
-        return returnedQueue;
-    }
 }

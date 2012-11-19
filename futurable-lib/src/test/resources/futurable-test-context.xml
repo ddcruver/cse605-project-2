@@ -14,4 +14,5 @@
 
     <bean id="testFuturable" class="edu.buffalo.cse.cse605.project2.FuturableTestClass"/>
 
+    <bean id="testFuturableQueue" class="edu.buffalo.cse.cse605.project2.FuturableQueueTestClass"/>
 </beans>
