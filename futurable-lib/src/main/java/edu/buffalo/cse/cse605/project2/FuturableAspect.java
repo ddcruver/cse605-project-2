@@ -108,14 +108,7 @@ public class FuturableAspect {
                 Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
 
                 // call it and return it
-                Object returnValue = null;
-
-                try {
-                    methodObj.setAccessible(true);
-                    returnValue = methodObj.invoke(realObject, adjustedArgs);
-                } catch (Exception ex) {
-                    LOG.error("Caught exception.", ex);
-                }
+                Object returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
                 return returnValue;
             }
         });
