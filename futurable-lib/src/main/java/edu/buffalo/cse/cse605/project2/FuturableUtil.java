@@ -32,7 +32,6 @@ public class FuturableUtil implements ApplicationContextAware
 
 	public AsyncTaskExecutor getExecutor(String executorName)
 	{
-
 		AsyncTaskExecutor executor;
 
 		if (executorName.equals(FuturableConstants.DEFAULT_TASK_EXECUTOR))

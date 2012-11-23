@@ -23,6 +23,10 @@
 		</layout>
 	</appender>
 
+	<logger name="org.springframework">
+		<level value="INFO"/>
+	</logger>
+	
 	<!-- ======================= -->
 	<!-- Setup the Root category -->
 	<!-- ======================= -->

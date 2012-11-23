@@ -15,4 +15,7 @@
     <bean id="testFuturable" class="edu.buffalo.cse.cse605.project2.FuturableTestClass"/>
 
     <bean id="testFuturableQueue" class="edu.buffalo.cse.cse605.project2.FuturableQueueTestClass"/>
+    
+    <bean id="testPartialFuturable" class="edu.buffalo.cse.cse605.project2.PartialFuturableTestClass"/>
+    
 </beans>
