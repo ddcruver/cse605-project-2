@@ -43,7 +43,7 @@ public class PartialFuturableAspect {
         Class<?>[] classes = {classToEmulate};
         
         HashingMethod hashingMethod = utility.getHashingMethod(realObject);
-        InvocationHandler partialInvoker = new PartialFuturableInvocationHandler(realObject, utility);
+        InvocationHandler partialInvoker = new PartialFuturableAspectProxyInvocationHandler(realObject, utility);
         final Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, partialInvoker);
         
         final Object argumentsWithProxy[] = { proxyObj };

@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
-public class PartialFuturableInvocationHandler implements InvocationHandler
+public class PartialFuturableAspectProxyInvocationHandler implements InvocationHandler
 {
 	private static final transient Logger LOG = LoggerFactory.getLogger(PartialFuturableAspect.class);
 
@@ -26,7 +26,7 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 
 	private final HashingMethod hashingMethod;
 	
-	public PartialFuturableInvocationHandler(Object originalObject, FuturableUtil futurableUtility)
+	public PartialFuturableAspectProxyInvocationHandler(Object originalObject, FuturableUtil futurableUtility)
 	{
 		realObject = originalObject;
 		utility = futurableUtility;
