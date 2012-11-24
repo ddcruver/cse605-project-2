@@ -1,4 +1,3 @@
-This file was created by IntelliJ IDEA (Leda) IU-122.592 for binding GitHub repository
-
+This project represents an attempt at using the Spring Framework, Object Proxies and, Annotations to use Java Futurables transparently in application code.
 
 Location of wikipedia test files - used English copus 1.3GB: http://nlp.lsi.upc.edu/wikicorpus/
