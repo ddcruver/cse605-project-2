@@ -60,4 +60,24 @@ public class FuturableUtil implements ApplicationContextAware
 		
 		return returnValue;
 	}
+
+	public HashingMethod getHashingMethod(Object realObject)
+	{
+		FuturableReturnType returnTypeAnnotation = realObject.getClass().getAnnotation(FuturableReturnType.class);
+		HashingMethod method;
+		
+		if(returnTypeAnnotation == null)
+		{
+			method = FuturableConstants.DEFAULT_HASHING_METHOD;
+		}
+		else
+		{
+			method = returnTypeAnnotation.hashType();
+			if(method == null)
+			{
+				method = FuturableConstants.DEFAULT_HASHING_METHOD;
+			}
+		}
+		return method;
+	}
 }

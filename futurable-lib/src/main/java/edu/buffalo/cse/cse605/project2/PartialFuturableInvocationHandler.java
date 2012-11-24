@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
@@ -16,24 +17,25 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 
 	private static final transient String HASH_SEPERATOR = ":";
 	
-	private Object realObject;
+	private final Object realObject;
 	
-	private FuturableUtil utility;
+	private final FuturableUtil utility;
 	
-	
-	private  Map<String, AtomicBoolean> hasCompletedMap = new HashMap<String, AtomicBoolean>();
+	private final Map<String, AtomicBoolean> hasCompletedMap = new HashMap<String, AtomicBoolean>();
 
+	private final HashingMethod hashingMethod;
 	
 	public PartialFuturableInvocationHandler(Object originalObject, FuturableUtil futurableUtility)
 	{
 		realObject = originalObject;
 		utility = futurableUtility;
+		hashingMethod = utility.getHashingMethod(realObject);
 	}
 	
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         LOG.debug("Giving to real object");
-
+        
         // now we need to translate that to the real method call, on the hopefully completed real object
         String name = method.getName();
         PartialFuturableGetter getter = method.getAnnotation(PartialFuturableGetter.class);
@@ -92,8 +94,17 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 		
 		for(Object argument : adjustedArgs)
 		{
-			hashBuilder.append(argument.toString());
-			hashBuilder.append(HASH_SEPERATOR );
+			if(hashingMethod == HashingMethod.HASH_CODE)
+			{
+				hashBuilder.append(argument.hashCode());
+			} else if(hashingMethod == HashingMethod.TO_STRING)
+			{
+				hashBuilder.append(argument.toString());
+			} else
+			{
+				throw new NotImplementedException("Get Argument does not support HashingMethod '" + hashingMethod.getClass().getName() + "'");
+			}
+			hashBuilder.append(HASH_SEPERATOR);
 		}
 		
 		return hashBuilder.toString();
