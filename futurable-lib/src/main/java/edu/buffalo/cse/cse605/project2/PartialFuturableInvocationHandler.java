@@ -41,57 +41,18 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
         
         Object[] adjustedArgs = (args == null) ? new Object[0] : args;
         
-        String argumentHash = getArugumentHash(adjustedArgs);
-        
-        
         // get the method argument we really want
         Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
 
         Object returnValue;
         
-        final AtomicBoolean hasCompleted;
-        
         if(getter != null)
         {
-        	LOG.debug("Calling Getter with Argument Hash: {}", argumentHash);
-        	synchronized (hasCompletedMap) {
-            	hasCompleted = getCompletedState(argumentHash);					
-            }
-        	
-        	synchronized (hasCompleted)
-        	{
-        		while(hasCompleted.get() == Boolean.FALSE.booleanValue())
-        		{
-        			LOG.debug("Waiting on completion of value");
-        			hasCompleted.wait();
-        			LOG.debug("Waking up.");
-        		}
-        		returnValue = handleGetter(realObject, method, methodObj, adjustedArgs);
-			}
-        	
+        	returnValue = handleGetter(realObject, method, methodObj, adjustedArgs);
         }
         else if(setter != null)
         {
-        	LOG.debug("Original call to Setter with Argument Hash: {}", argumentHash);
-        	// TODO this is a hack we should serialize the value of a setter into hash anyways
-        	int lastArgumentHash = argumentHash.substring(0, argumentHash.length()-1).lastIndexOf(HASH_SEPERATOR);
-        	
-        	LOG.debug("Arugment Hash Last: {}", lastArgumentHash);
-        	argumentHash = argumentHash.substring(0, lastArgumentHash+1);
-        	
-        	LOG.debug("Calling Setter with Argument Hash: {}", argumentHash);
-        	synchronized (hasCompletedMap) {
-        		hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
-        	}
-        	
-        	synchronized (hasCompleted) {
-        		LOG.debug("Calling actual setter");
-        		returnValue = handleSetter(realObject, method, methodObj, adjustedArgs);
-        		LOG.debug("Returning from actual setter");
-        		hasCompleted.set(Boolean.TRUE);
-        		hasCompleted.notify();
-			}
-        	
+        	returnValue = handleSetter(realObject, method, methodObj, adjustedArgs);
         }
         else
         {
@@ -118,6 +79,14 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 		return hasCompleted;
 	}
 
+    /**
+     * 
+     * This function currently hashes all the arguments but ideally should only hash those not annotated with 
+     * {@link FuturableValue}.
+     * 
+     * @param adjustedArgs
+     * @return
+     */
 	private String getArugumentHash(Object[] adjustedArgs) {
 		StringBuilder hashBuilder = new StringBuilder();
 		
@@ -132,15 +101,55 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 
 	protected Object handleSetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs)
     {
-    	LOG.debug("Executing setter method");
-    	Object returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+		String argumentHash = getArugumentHash(adjustedArgs);
+		final AtomicBoolean hasCompleted;
+		Object returnValue;
+		
+		LOG.debug("Original call to Setter with Argument Hash: {}", argumentHash);
+    	// TODO this is a hack we should serialize the value of a setter into hash anyways
+    	int lastArgumentHash = argumentHash.substring(0, argumentHash.length()-1).lastIndexOf(HASH_SEPERATOR);
+    	
+    	LOG.debug("Arugment Hash Last: {}", lastArgumentHash);
+    	argumentHash = argumentHash.substring(0, lastArgumentHash+1);
+    	
+    	LOG.debug("Calling Setter with Argument Hash: {}", argumentHash);
+    	synchronized (hasCompletedMap) {
+    		hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
+    	}
+    	
+    	synchronized (hasCompleted) {
+    		LOG.debug("Calling actual setter");
+    		returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+    		LOG.debug("Returning from actual setter");
+    		hasCompleted.set(Boolean.TRUE);
+    		hasCompleted.notify();
+		}
+    	
 		return returnValue;
 	}
 
-	protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs)
+	protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) throws InterruptedException
 	{
-		LOG.debug("Executing getter method");
-		Object returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+		String argumentHash = getArugumentHash(adjustedArgs);
+		final AtomicBoolean hasCompleted;
+        Object returnValue;
+        
+		LOG.debug("Calling Getter with Argument Hash: {}", argumentHash);
+    	synchronized (hasCompletedMap) {
+        	hasCompleted = getCompletedState(argumentHash);					
+        }
+    	
+    	synchronized (hasCompleted)
+    	{
+    		while(hasCompleted.get() == Boolean.FALSE.booleanValue())
+    		{
+    			LOG.debug("Waiting on completion of value");
+    			hasCompleted.wait();
+    			LOG.debug("Waking up.");
+    		}
+    		returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+		}
+		
 		return returnValue;
 	}
 }
