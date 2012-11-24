@@ -1,6 +1,6 @@
 package edu.buffalo.cse.cse605.project2;
 
-@FuturableReturnType(hashType=HashingMethod.TO_STRING)
+@FuturableReturnType(hashingMethod=HashingMethod.HASH_CODE)
 public interface PartialFuturableReturnType {
 
 	@PartialFuturableGetter

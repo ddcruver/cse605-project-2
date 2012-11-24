@@ -2,6 +2,7 @@ package edu.buffalo.cse.cse605.project2;
 
 import org.jblas.DoubleMatrix;
 
+@FuturableReturnType(hashingMethod=HashingMethod.TO_STRING)
 public class PartialFuturableReturnTypeImpl implements PartialFuturableReturnType {
 
 	private DoubleMatrix matrix = new DoubleMatrix(10,10);

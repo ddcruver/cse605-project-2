@@ -68,12 +68,34 @@ public class FuturableUtil implements ApplicationContextAware
 		
 		if(returnTypeAnnotation == null)
 		{
-			method = FuturableConstants.DEFAULT_HASHING_METHOD;
+			method = getInterfaceHashingMethod(realObject);
+			if(method == null)
+			{
+				method = FuturableConstants.DEFAULT_HASHING_METHOD;
+			}
 		}
 		else
 		{
-			method = returnTypeAnnotation.hashType();
+			method = returnTypeAnnotation.hashingMethod();
 			if(method == null)
+			{
+				method = FuturableConstants.DEFAULT_HASHING_METHOD;
+			}
+		}
+		return method;
+	}
+
+	private HashingMethod getInterfaceHashingMethod(Object realObject) {
+		HashingMethod method = null;
+		Class<?>[] interfaces = realObject.getClass().getInterfaces();
+		for(Class<?> interFace : interfaces)
+		{
+			FuturableReturnType returnType = interFace.getAnnotation(FuturableReturnType.class);
+			if(returnType != null)
+			{
+				method = returnType.hashingMethod();
+			}
+			else 
 			{
 				method = FuturableConstants.DEFAULT_HASHING_METHOD;
 			}
