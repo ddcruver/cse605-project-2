@@ -23,7 +23,7 @@ public class PartialFuturableTest {
     
     @Test
     public void testDefaultExecutor() throws InterruptedException {
-    	PartialFuturableReturnType type = new PartialFuturableReturnTypeImpl();
+    	PartialFuturableTestReturnType type = new PartialFuturableTestReturnTypeImpl();
     	type = futurable.doPartialWork(type);
         LOG.info("Return: {}", type);
         
@@ -34,7 +34,7 @@ public class PartialFuturableTest {
     
     @Test
     public void testUserDefinedExecutor() throws InterruptedException {
-    	PartialFuturableReturnType type = new PartialFuturableReturnTypeImpl();
+    	PartialFuturableTestReturnType type = new PartialFuturableTestReturnTypeImpl();
     	type = futurable.doPartialWorkWithUserDefinedExecutor(type);
         LOG.info("Return: {}", type);
         

@@ -3,7 +3,7 @@ package edu.buffalo.cse.cse605.project2;
 import org.jblas.DoubleMatrix;
 
 @FuturableReturnType(hashingMethod=HashingMethod.TO_STRING)
-public class PartialFuturableReturnTypeImpl implements PartialFuturableReturnType {
+public class PartialFuturableTestReturnTypeImpl implements PartialFuturableTestReturnType {
 
 	private DoubleMatrix matrix = new DoubleMatrix(10,10);
 	
@@ -15,9 +15,11 @@ public class PartialFuturableReturnTypeImpl implements PartialFuturableReturnTyp
 
 	@Override
 	@PartialFuturableSetter
-	public void setValue(int x, int y, double value) {
+	public void setValue(int x, int y, @FuturableValue double value) {
 		matrix.put(x, y, value);
 	}
+
+	
 	
 
 

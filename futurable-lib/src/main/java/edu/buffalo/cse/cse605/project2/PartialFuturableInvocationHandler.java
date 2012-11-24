@@ -1,5 +1,6 @@
 package edu.buffalo.cse.cse605.project2;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -85,26 +86,46 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
      * 
      * This function currently hashes all the arguments but ideally should only hash those not annotated with 
      * {@link FuturableValue}.
+     * @param method 
      * 
      * @param adjustedArgs
      * @return
      */
-	private String getArugumentHash(Object[] adjustedArgs) {
+    
+	private String getArugumentHash(Method method, Object[] adjustedArgs) {
 		StringBuilder hashBuilder = new StringBuilder();
 		
-		for(Object argument : adjustedArgs)
+		Annotation[][] paramatersAnnotations = method.getParameterAnnotations();
+		
+		for(int p = 0; p < paramatersAnnotations.length; p++)
 		{
-			if(hashingMethod == HashingMethod.HASH_CODE)
+			Annotation[] parameterAnnotation = paramatersAnnotations[p];
+			boolean foundFuturableValueAnnotation = false;
+			for(Annotation annot : parameterAnnotation)
 			{
-				hashBuilder.append(argument.hashCode());
-			} else if(hashingMethod == HashingMethod.TO_STRING)
-			{
-				hashBuilder.append(argument.toString());
-			} else
-			{
-				throw new NotImplementedException("Get Argument does not support HashingMethod '" + hashingMethod.getClass().getName() + "'");
+				LOG.debug("Annotation of {} parameter is {}", p, annot);
+				if(annot.annotationType().equals(FuturableValue.class))
+				{
+					LOG.debug("Found {} Annotation", FuturableValue.class);
+					foundFuturableValueAnnotation = true;
+				}
 			}
-			hashBuilder.append(HASH_SEPERATOR);
+			
+			if(foundFuturableValueAnnotation == false)
+			{
+				
+				if(hashingMethod == HashingMethod.HASH_CODE)
+				{
+					hashBuilder.append(adjustedArgs[p].hashCode());
+				} else if(hashingMethod == HashingMethod.TO_STRING)
+				{
+					hashBuilder.append(adjustedArgs[p].toString());
+				} else
+				{
+					throw new NotImplementedException("Get Argument does not yet support the HashingMethod '" + hashingMethod.getClass().getName() + "'");
+				}
+				hashBuilder.append(HASH_SEPERATOR);
+			}
 		}
 		
 		return hashBuilder.toString();
@@ -112,18 +133,12 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 
 	protected Object handleSetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs)
     {
-		String argumentHash = getArugumentHash(adjustedArgs);
+		String argumentHash = getArugumentHash(method, adjustedArgs);
 		final AtomicBoolean hasCompleted;
 		Object returnValue;
 		
 		LOG.debug("Original call to Setter with Argument Hash: {}", argumentHash);
-    	// TODO this is a hack we should serialize the value of a setter into hash anyways
-    	int lastArgumentHash = argumentHash.substring(0, argumentHash.length()-1).lastIndexOf(HASH_SEPERATOR);
-    	
-    	LOG.debug("Arugment Hash Last: {}", lastArgumentHash);
-    	argumentHash = argumentHash.substring(0, lastArgumentHash+1);
-    	
-    	LOG.debug("Calling Setter with Argument Hash: {}", argumentHash);
+
     	synchronized (hasCompletedMap) {
     		hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
     	}
@@ -141,12 +156,13 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
 
 	protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) throws InterruptedException
 	{
-		String argumentHash = getArugumentHash(adjustedArgs);
+		String argumentHash = getArugumentHash(method, adjustedArgs);
 		final AtomicBoolean hasCompleted;
         Object returnValue;
         
 		LOG.debug("Calling Getter with Argument Hash: {}", argumentHash);
-    	synchronized (hasCompletedMap) {
+    	
+		synchronized (hasCompletedMap) {
         	hasCompleted = getCompletedState(argumentHash);					
         }
     	
@@ -156,7 +172,7 @@ public class PartialFuturableInvocationHandler implements InvocationHandler
     		{
     			LOG.debug("Waiting on completion of value");
     			hasCompleted.wait();
-    			LOG.debug("Waking up.");
+    			LOG.debug("Waking up while waiting on completion of value");
     		}
     		returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
 		}
