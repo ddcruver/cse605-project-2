@@ -3,6 +3,7 @@ package edu.buffalo.cse.cse605.project2.graphic.processing;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Delayed;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.core.io.Resource;
 
 import edu.buffalo.cse.cse605.project2.PartialFuturableCompleted;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.BlurImage;
+import edu.buffalo.cse.cse605.project2.graphic.processing.processor.DelayFilter;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.GreyScale;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.ImageProcessor;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.NoOp;
@@ -38,14 +40,16 @@ public class ImageProcessingRunner
 		RemoveColor removeColorFilter = context.getBean(RemoveColor.class);
 		ImageProcessor greyScaleFilter = context.getBean("greyScaleFilter", ImageProcessor.class);
 		ImageProcessor noOpFilter = context.getBean("noOpFilter", ImageProcessor.class);
-		
+		DelayFilter delayFilter = context.getBean(DelayFilter.class);
 		
 		Image noOpImage = noOpFilter.process(image, null, null);
 		Image bluredImage = blurImageFilter.blurImage(noOpImage, null, 5);
-		// Cuases exception to be thrown
+		Image delayImage = delayFilter.delay(bluredImage, null, 100);
+		
+		// Causes exception to be thrown
 		//Image bluredImageOut = new ImageImpl();
 		//Image bluredImage = blurImageFilter.blurImage(noOpImage, bluredImageOut, 5);
-		Image afterImage = greyScaleFilter.process(bluredImage, null, null);
+		Image afterImage = greyScaleFilter.process(delayImage, null, null);
 		
 		int snapshot = 0;
 		File outputFolder = new File("target/images/");
