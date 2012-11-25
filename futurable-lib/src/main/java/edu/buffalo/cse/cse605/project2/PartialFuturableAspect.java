@@ -5,11 +5,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.AsyncTaskExecutor;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -20,13 +17,13 @@ public class PartialFuturableAspect {
     private FuturableUtil utility;
 
     public Object interceptFuturableMethod(final ProceedingJoinPoint pjp) throws Throwable {
-        LOG.debug("Before");
 
         final MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
         Method method = signature.getMethod();
+        LOG.debug("Method: {}", method.getName());
         PartialFuturable futurableAnnotation = method.getAnnotation(PartialFuturable.class);
         String executorName = futurableAnnotation.executor();
-
+        
         AsyncTaskExecutor executor = utility.getExecutor(executorName);
 
         final Class<?> classToEmulate = signature.getClass().getClassLoader().loadClass(signature.getReturnType().getName());
@@ -36,26 +33,24 @@ public class PartialFuturableAspect {
         LOG.debug("Return Type: {}", classToEmulate.getName());
         for(Class<?> parameterType : parameterTypes)
         {
-        	LOG.error("Input Type: {}", parameterType.getName());
+        	LOG.debug("Input Type: {}", parameterType.getName());
         }
         
-        // TODO: This should identify which argument to use
-        final Object realObject = pjp.getArgs()[0];
-        final Object[] arguments = pjp.getArgs();
+        final Object realObject;
+        
+        // If user provides an output container proxy it otherwise proxy the input containter.
+        if(pjp.getArgs()[1] == null)
+        	realObject = pjp.getArgs()[0];
+        else
+        	realObject = pjp.getArgs()[1];
         
         Class<?>[] classes = {classToEmulate};
-        
-        HashingMethod hashingMethod = utility.getHashingMethod(realObject);
-        InvocationHandler partialInvoker = new PartialFuturableAspectProxyInvocationHandler(realObject, utility);
+        final PartialFuturableAspectProxyInvocationHandler partialInvoker = new PartialFuturableAspectProxyInvocationHandler(realObject, utility);
         final Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, partialInvoker);
         
-        // TODO: Should possibly detect in and out, null or not?
-        
+        final Object[] arguments = pjp.getArgs();
         arguments[1] = proxyObj;
         
-        
-        LOG.debug("After returned fake object");
-
         final Future<Object> future = executor.submit(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
@@ -63,6 +58,12 @@ public class PartialFuturableAspect {
                     return pjp.proceed(arguments);
                 } catch (Throwable e) {
                     throw new ExecutionException(e);
+                } finally
+                {
+                	partialInvoker.setOperationComplete();
+                	Object target = pjp.getTarget();
+                	PartialFuturableCompleted pfc = (PartialFuturableCompleted) target;
+                	pfc.setComplete(true);
                 }
             }
         });

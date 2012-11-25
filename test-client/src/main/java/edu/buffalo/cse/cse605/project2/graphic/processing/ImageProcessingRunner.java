@@ -8,12 +8,15 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import edu.buffalo.cse.cse605.project2.PartialFuturableCompleted;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.BlurImage;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.GreyScale;
+import edu.buffalo.cse.cse605.project2.graphic.processing.processor.ImageProcessor;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.NoOp;
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.RemoveColor;
 
@@ -33,21 +36,25 @@ public class ImageProcessingRunner
 		
 		BlurImage blurImageFilter = context.getBean(BlurImage.class);
 		RemoveColor removeColorFilter = context.getBean(RemoveColor.class);
-		GreyScale greyScaleFilter = context.getBean(GreyScale.class);
-		NoOp noOpFilter = context.getBean(NoOp.class);
+		ImageProcessor greyScaleFilter = context.getBean("greyScaleFilter", ImageProcessor.class);
+		ImageProcessor noOpFilter = context.getBean("noOpFilter", ImageProcessor.class);
 		
-		Image bluredImage = blurImageFilter.blurImage(image, null, 5);
-		Image afterImage = greyScaleFilter.lighness(bluredImage, null);
-		//removeColorFilter.removeBlue(afterImage, null);
+		
+		Image noOpImage = noOpFilter.process(image, null, null);
+		Image bluredImage = blurImageFilter.blurImage(noOpImage, null, 5);
+		// Cuases exception to be thrown
+		//Image bluredImageOut = new ImageImpl();
+		//Image bluredImage = blurImageFilter.blurImage(noOpImage, bluredImageOut, 5);
+		Image afterImage = greyScaleFilter.process(bluredImage, null, null);
 		
 		int snapshot = 0;
-		File outputFolder = new File("images/");
+		File outputFolder = new File("target/images/");
 		FileUtils.deleteQuietly(outputFolder);
 		Thread.sleep(2000);
-		outputFolder = new File("images/");
+		outputFolder = new File("target/images/");
 		outputFolder.mkdir();
 		
-		while(true)
+		while(!greyScaleFilter.getComplete())
 		{
 			snapshot++;
 			File outputFile = new File(outputFolder, "apple-new-" + snapshot + ".png");
@@ -57,7 +64,6 @@ public class ImageProcessingRunner
 			Thread.sleep(2000);
 		}
 		
+		((ConfigurableApplicationContext) context).close();
 	}
-	
-	
 }

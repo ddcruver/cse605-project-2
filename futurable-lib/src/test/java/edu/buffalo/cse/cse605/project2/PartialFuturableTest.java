@@ -1,9 +1,5 @@
 package edu.buffalo.cse.cse605.project2;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
