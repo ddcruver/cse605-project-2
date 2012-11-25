@@ -94,21 +94,17 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 	 * @return
 	 */
 
-	private String getArugumentHash(Method method, Object[] adjustedArgs) {
+	private String getArugumentHash(Method method, Object[] adjustedArgs, boolean checkForFuturableValues) {
 		StringBuilder hashBuilder = new StringBuilder();
 
 		Annotation[][] paramatersAnnotations = method.getParameterAnnotations();
 
 		for (int p = 0; p < paramatersAnnotations.length; p++) {
-			Annotation[] parameterAnnotation = paramatersAnnotations[p];
+			
 			boolean foundFuturableValueAnnotation = false;
-			for (Annotation annot : parameterAnnotation) {
-				LOG.debug("Annotation of {} parameter is {}", p, annot);
-				if (annot.annotationType().equals(FuturableValue.class)) {
-					LOG.debug("Found {} Annotation", FuturableValue.class);
-					foundFuturableValueAnnotation = true;
-				}
-			}
+			
+			if(checkForFuturableValues)
+				foundFuturableValueAnnotation = checkForFuturableValueInParameter(paramatersAnnotations, p);
 
 			if (foundFuturableValueAnnotation == false) {
 
@@ -126,8 +122,23 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 		return hashBuilder.toString();
 	}
 
+	private boolean checkForFuturableValueInParameter(Annotation[][] paramatersAnnotations, int p) {
+		boolean foundAnnotation = false;
+		Annotation[] parameterAnnotation = paramatersAnnotations[p];
+		
+		for (Annotation annot : parameterAnnotation) {
+			LOG.trace("Annotation of {} parameter is {}", p, annot);
+			if (annot.annotationType().equals(FuturableValue.class)) {
+				LOG.trace("Found {} Annotation", FuturableValue.class);
+				foundAnnotation = true;
+				break;
+			}
+		}
+		return foundAnnotation;
+	}
+
 	protected Object handleSetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
-		String argumentHash = getArugumentHash(method, adjustedArgs);
+		String argumentHash = getArugumentHash(method, adjustedArgs, true);
 		final AtomicBoolean hasCompleted;
 		Object returnValue;
 
@@ -146,9 +157,9 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 		return returnValue;
 	}
 	
-	private Object handleMarker(Object realObject2, Method method, Method methodObj, Object[] adjustedArgs) {
+	private Object handleMarker(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
 		
-		String argumentHash = getArugumentHash(method, adjustedArgs);
+		String argumentHash = getArugumentHash(method, adjustedArgs, false);
 		final AtomicBoolean hasCompleted;
 		Object returnValue;
 
@@ -168,7 +179,7 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 	}
 
 	protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) throws InterruptedException {
-		String argumentHash = getArugumentHash(method, adjustedArgs);
+		String argumentHash = getArugumentHash(method, adjustedArgs, false);
 		final AtomicBoolean hasCompleted;
 		Object returnValue;
 
