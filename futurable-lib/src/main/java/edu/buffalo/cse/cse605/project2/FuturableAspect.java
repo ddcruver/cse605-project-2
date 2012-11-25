@@ -62,11 +62,11 @@ public class FuturableAspect {
 
 
                 // we need this to avoid a stack overflow if we try to remove this object from the map
-                if ("equals".equals(name)) {
-                    return proxy == args[0];
-                } else if ("hashCode".equals(name)) {
-                    return method.hashCode() & this.hashCode();
-                }
+//                if ("equals".equals(name)) {
+//                    return proxy == args[0];
+//                } else if ("hashCode".equals(name)) {
+//                    return method.hashCode() & this.hashCode();
+//                }
 
                 LOG.debug("Giving to real object ({})", name);
 
@@ -120,10 +120,9 @@ public class FuturableAspect {
         return proxyObj;
 
     }
-    
-    public void setFuturableUtil(FuturableUtil futurableUtil)
-    {
-    	utility = futurableUtil;
+
+    public void setFuturableUtil(FuturableUtil futurableUtil) {
+        utility = futurableUtil;
     }
 
     private Map<Object, Future<?>> proxyToFutureMap = new MapMaker().weakKeys().weakValues().makeMap();

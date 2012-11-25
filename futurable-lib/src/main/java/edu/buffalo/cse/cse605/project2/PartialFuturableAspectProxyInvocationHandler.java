@@ -1,212 +1,204 @@
 package edu.buffalo.cse.cse605.project2;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class PartialFuturableAspectProxyInvocationHandler implements InvocationHandler {
-	private static final transient Logger LOG = LoggerFactory.getLogger(PartialFuturableAspect.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(PartialFuturableAspect.class);
 
-	private static final transient String HASH_SEPERATOR = ":";
+    private static final transient String HASH_SEPARATOR = ":";
 
-	private final Object realObject;
-	
-	private boolean operationComplete = false;
+    private final Object realObject;
 
-	private final FuturableUtil utility;
+    private boolean operationComplete = false;
 
-	private final Map<String, AtomicBoolean> hasCompletedMap = new HashMap<String, AtomicBoolean>();
+    private final FuturableUtil utility;
 
-	private final HashingMethod hashingMethod;
+    private final Map<String, AtomicBoolean> hasCompletedMap = Maps.newConcurrentMap();
 
-	public PartialFuturableAspectProxyInvocationHandler(Object originalObject, FuturableUtil futurableUtility) {
-		realObject = originalObject;
-		utility = futurableUtility;
-		hashingMethod = utility.getHashingMethod(realObject);
-	}
+    private final HashingMethod hashingMethod;
 
-	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		
-		Object returnValue = null;
-		// now we need to translate that to the real method call, on the hopefully completed real object
-		String name = method.getName();
-		Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
-		
-		// get the method argument we really want
-		Object[] adjustedArgs = (args == null) ? new Object[0] : args;
+    public PartialFuturableAspectProxyInvocationHandler(Object originalObject, FuturableUtil futurableUtility) {
+        realObject = originalObject;
+        utility = futurableUtility;
+        hashingMethod = utility.getHashingMethod(realObject);
+    }
 
-		// Shortcut if the futurable has completed
-		if(operationComplete == true)
-		{
-			returnValue = handleNormalMethod(realObject, method, methodObj, adjustedArgs);
-			return returnValue;
-		}
-			
-		PartialFuturableGetter getter = method.getAnnotation(PartialFuturableGetter.class);
-		PartialFuturableSetter setter = method.getAnnotation(PartialFuturableSetter.class);
-		PartialFuturableMarker marker = method.getAnnotation(PartialFuturableMarker.class);
-	
-		if (getter != null) {
-			returnValue = handleGetter(realObject, method, methodObj, adjustedArgs);
-		} else if (setter != null) {
-			returnValue = handleSetter(realObject, method, methodObj, adjustedArgs);
-		} else if (marker != null) {
-			returnValue = handleMarker(realObject, method, methodObj, adjustedArgs);
-		} else {
-			returnValue = handleNormalMethod(realObject, method, methodObj, adjustedArgs);
-		}
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-		return returnValue;
-	}
+        Object returnValue = null;
+        // now we need to translate that to the real method call, on the hopefully completed real object
+        String name = method.getName();
+        Method methodObj = ReflectionUtils.findMethod(realObject.getClass(), name, method.getParameterTypes());
 
-	private Object handleNormalMethod(Object realObject2, Method method, Method methodObj, Object[] adjustedArgs) {
-		LOG.trace("Executing normal method");
-		return utility.executeMethod(realObject, methodObj, adjustedArgs);
-	}
+        // get the method argument we really want
+        Object[] adjustedArgs = (args == null) ? new Object[0] : args;
 
-	private AtomicBoolean getCompletedState(String argumentHash) {
-		// Give completed status to false if didn't already exist.
-		return getCompletedState(argumentHash, Boolean.FALSE);
-	}
+        // Shortcut if the futurable has completed
+        if (operationComplete) {
+            returnValue = handleNormalMethod(realObject, method, methodObj, adjustedArgs);
+            return returnValue;
+        }
 
-	private AtomicBoolean getCompletedState(String argumentHash, Boolean completed) {
+        PartialFuturableGetter getter = method.getAnnotation(PartialFuturableGetter.class);
+        PartialFuturableSetter setter = method.getAnnotation(PartialFuturableSetter.class);
+        PartialFuturableMarker marker = method.getAnnotation(PartialFuturableMarker.class);
 
-		AtomicBoolean hasCompleted = hasCompletedMap.get(argumentHash);
-		if (hasCompleted == null) {
-			hasCompleted = new AtomicBoolean(completed);
-			hasCompletedMap.put(argumentHash, hasCompleted);
-		}
-		return hasCompleted;
-	}
+        if (getter != null) {
+            returnValue = handleGetter(realObject, method, methodObj, adjustedArgs);
+        } else if (setter != null) {
+            returnValue = handleSetter(realObject, method, methodObj, adjustedArgs);
+        } else if (marker != null) {
+            returnValue = handleMarker(realObject, method, methodObj, adjustedArgs);
+        } else {
+            returnValue = handleNormalMethod(realObject, method, methodObj, adjustedArgs);
+        }
 
-	/**
-	 * @param method
-	 * @param adjustedArgs
-	 * @return
-	 */
+        return returnValue;
+    }
 
-	private String getArugumentHash(Method method, Object[] adjustedArgs, boolean checkForFuturableValues) {
-		StringBuilder hashBuilder = new StringBuilder();
+    private Object handleNormalMethod(Object realObject2, Method method, Method methodObj, Object[] adjustedArgs) {
+        LOG.trace("Executing normal method");
+        return utility.executeMethod(realObject, methodObj, adjustedArgs);
+    }
 
-		Annotation[][] paramatersAnnotations = method.getParameterAnnotations();
+    private AtomicBoolean getCompletedState(String argumentHash) {
+        // Give completed status to false if didn't already exist.
+        return getCompletedState(argumentHash, Boolean.FALSE);
+    }
 
-		for (int p = 0; p < paramatersAnnotations.length; p++) {
-			
-			boolean foundFuturableValueAnnotation = false;
-			
-			if(checkForFuturableValues)
-				foundFuturableValueAnnotation = checkForFuturableValueInParameter(paramatersAnnotations, p);
+    private AtomicBoolean getCompletedState(String argumentHash, Boolean completed) {
 
-			if (foundFuturableValueAnnotation == false) {
+        AtomicBoolean hasCompleted = hasCompletedMap.get(argumentHash);
+        if (hasCompleted == null) {
+            hasCompleted = new AtomicBoolean(completed);
+            hasCompletedMap.put(argumentHash, hasCompleted);
+        }
+        return hasCompleted;
+    }
 
-				if (hashingMethod == HashingMethod.HASH_CODE) {
-					hashBuilder.append(adjustedArgs[p].hashCode());
-				} else if (hashingMethod == HashingMethod.TO_STRING) {
-					hashBuilder.append(adjustedArgs[p].toString());
-				} else {
-					throw new NotImplementedException("Get Argument does not yet support the HashingMethod '" + hashingMethod.getClass().getName() + "'");
-				}
-				hashBuilder.append(HASH_SEPERATOR);
-			}
-		}
+    /**
+     * @param method
+     * @param adjustedArgs
+     * @return
+     */
 
-		return hashBuilder.toString();
-	}
+    private String getArugumentHash(Method method, Object[] adjustedArgs, boolean checkForFuturableValues) {
+        StringBuilder hashBuilder = new StringBuilder();
 
-	private boolean checkForFuturableValueInParameter(Annotation[][] paramatersAnnotations, int p) {
-		boolean foundAnnotation = false;
-		Annotation[] parameterAnnotation = paramatersAnnotations[p];
-		
-		for (Annotation annot : parameterAnnotation) {
-			LOG.trace("Annotation of {} parameter is {}", p, annot);
-			if (annot.annotationType().equals(FuturableValue.class)) {
-				LOG.trace("Found {} Annotation", FuturableValue.class);
-				foundAnnotation = true;
-				break;
-			}
-		}
-		return foundAnnotation;
-	}
+        Annotation[][] paramatersAnnotations = method.getParameterAnnotations();
 
-	protected Object handleSetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
-		String argumentHash = getArugumentHash(method, adjustedArgs, true);
-		final AtomicBoolean hasCompleted;
-		Object returnValue;
+        for (int p = 0; p < paramatersAnnotations.length; p++) {
 
-		synchronized (hasCompletedMap) {
-			hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
-		}
+            boolean foundFuturableValueAnnotation = false;
 
-		synchronized (hasCompleted) {
-			LOG.trace("Calling actual setter");
-			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
-			LOG.trace("Returning from actual setter");
-			hasCompleted.set(Boolean.TRUE);
-			hasCompleted.notify();
-		}
+            if (checkForFuturableValues)
+                foundFuturableValueAnnotation = checkForFuturableValueInParameter(paramatersAnnotations, p);
 
-		return returnValue;
-	}
-	
-	private Object handleMarker(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
-		
-		String argumentHash = getArugumentHash(method, adjustedArgs, false);
-		final AtomicBoolean hasCompleted;
-		Object returnValue;
+            if (!foundFuturableValueAnnotation) {
 
-		synchronized (hasCompletedMap) {
-			hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
-		}
+                if (hashingMethod == HashingMethod.HASH_CODE) {
+                    hashBuilder.append(adjustedArgs[p].hashCode());
+                } else if (hashingMethod == HashingMethod.TO_STRING) {
+                    hashBuilder.append(adjustedArgs[p].toString());
+                } else {
+                    throw new NotImplementedException("Get Argument does not yet support the HashingMethod '" + hashingMethod.getClass().getName() + "'");
+                }
+                hashBuilder.append(HASH_SEPARATOR);
+            }
+        }
 
-		synchronized (hasCompleted) {
-			LOG.trace("Calling actual marker");
-			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
-			LOG.trace("Returning from actual marker");
-			hasCompleted.set(Boolean.TRUE);
-			hasCompleted.notify();
-		}
+        return hashBuilder.toString();
+    }
 
-		return returnValue;
-	}
+    private boolean checkForFuturableValueInParameter(Annotation[][] parametersAnnotations, int p) {
+        boolean foundAnnotation = false;
+        Annotation[] parameterAnnotation = parametersAnnotations[p];
 
-	protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) throws InterruptedException {
-		String argumentHash = getArugumentHash(method, adjustedArgs, false);
-		final AtomicBoolean hasCompleted;
-		Object returnValue;
+        for (Annotation annot : parameterAnnotation) {
+            LOG.trace("Annotation of {} parameter is {}", p, annot);
+            if (annot.annotationType().equals(FuturableValue.class)) {
+                LOG.trace("Found {} Annotation", FuturableValue.class);
+                foundAnnotation = true;
+                break;
+            }
+        }
+        return foundAnnotation;
+    }
 
-		LOG.debug("Calling Getter with Argument Hash: {}", argumentHash);
+    protected Object handleSetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
+        String argumentHash = getArugumentHash(method, adjustedArgs, true);
+        final AtomicBoolean hasCompleted;
+        Object returnValue;
 
-		synchronized (hasCompletedMap) {
-			hasCompleted = getCompletedState(argumentHash);
-		}
+        hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
 
-		synchronized (hasCompleted) {
-			while (hasCompleted.get() == Boolean.FALSE.booleanValue() && operationComplete == false) {
-				LOG.trace("Waiting on completion of value");
-				hasCompleted.wait(1000);
-				LOG.trace("Waking up while waiting on completion of value");
-			}
-			
-			if(operationComplete)
-				LOG.trace("Waking up because previous operation was completed.");
-			
-			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
-		}
+        synchronized (hasCompleted) {
+            LOG.trace("Calling actual setter");
+            returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+            LOG.trace("Returning from actual setter");
+            hasCompleted.set(Boolean.TRUE);
+            hasCompleted.notify();
+        }
 
-		return returnValue;
-	}
-	
-	public void setOperationComplete()
-	{
-		operationComplete = true;
-	}
+        return returnValue;
+    }
+
+    private Object handleMarker(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) {
+
+        String argumentHash = getArugumentHash(method, adjustedArgs, false);
+        final AtomicBoolean hasCompleted;
+        Object returnValue;
+
+        hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
+
+        synchronized (hasCompleted) {
+            LOG.trace("Calling actual marker");
+            returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+            LOG.trace("Returning from actual marker");
+            hasCompleted.set(Boolean.TRUE);
+            hasCompleted.notify();
+        }
+
+        return returnValue;
+    }
+
+    protected Object handleGetter(Object realObject, Method method, Method methodObj, Object[] adjustedArgs) throws InterruptedException {
+        String argumentHash = getArugumentHash(method, adjustedArgs, false);
+        final AtomicBoolean hasCompleted;
+        Object returnValue;
+
+        LOG.debug("Calling Getter with Argument Hash: {}", argumentHash);
+
+        hasCompleted = getCompletedState(argumentHash);
+
+        synchronized (hasCompleted) {
+            while (!hasCompleted.get() && !operationComplete) {
+                LOG.trace("Waiting on completion of value");
+                hasCompleted.wait(1000);
+                LOG.trace("Waking up while waiting on completion of value");
+            }
+
+            if (operationComplete)
+                LOG.trace("Waking up because previous operation was completed.");
+
+            returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+        }
+
+        return returnValue;
+    }
+
+    public void setOperationComplete() {
+        operationComplete = true;
+    }
 }
