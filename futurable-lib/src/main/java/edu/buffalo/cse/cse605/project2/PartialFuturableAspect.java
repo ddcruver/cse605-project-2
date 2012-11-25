@@ -8,6 +8,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -39,6 +41,7 @@ public class PartialFuturableAspect {
         
         // TODO: This should identify which argument to use
         final Object realObject = pjp.getArgs()[0];
+        final Object[] arguments = pjp.getArgs();
         
         Class<?>[] classes = {classToEmulate};
         
@@ -46,7 +49,10 @@ public class PartialFuturableAspect {
         InvocationHandler partialInvoker = new PartialFuturableAspectProxyInvocationHandler(realObject, utility);
         final Object proxyObj = Proxy.newProxyInstance(signature.getClass().getClassLoader(), classes, partialInvoker);
         
-        final Object argumentsWithProxy[] = { proxyObj };
+        // TODO: Should possibly detect in and out, null or not?
+        
+        arguments[1] = proxyObj;
+        
         
         LOG.debug("After returned fake object");
 
@@ -54,9 +60,7 @@ public class PartialFuturableAspect {
             @Override
             public Object call() throws Exception {
                 try {
-                    // proceed as a separate thread
-                	// TODO: Must be changed so that the proxy object is added to the arguments
-                    return pjp.proceed(argumentsWithProxy);
+                    return pjp.proceed(arguments);
                 } catch (Throwable e) {
                     throw new ExecutionException(e);
                 }

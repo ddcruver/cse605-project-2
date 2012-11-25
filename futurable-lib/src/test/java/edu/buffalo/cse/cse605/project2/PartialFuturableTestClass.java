@@ -8,14 +8,14 @@ public class PartialFuturableTestClass {
     private static final transient Logger LOG = LoggerFactory.getLogger(PartialFuturableTestClass.class);
 
     @PartialFuturable
-    public PartialFuturableTestReturnType doPartialWork(PartialFuturableTestReturnType type) throws InterruptedException {
-    	type.setValue(1, 1, 5);
-        return type;
+    public PartialFuturableTestReturnType doPartialWork(PartialFuturableTestReturnType input, PartialFuturableTestReturnType proxiedOutput) throws InterruptedException {
+    	proxiedOutput.setValue(1, 1, 5);
+        return proxiedOutput;
     }
 
     @PartialFuturable(executor = "userDefinedExecutor")
-    public PartialFuturableTestReturnType doPartialWorkWithUserDefinedExecutor(PartialFuturableTestReturnType type) throws InterruptedException {
-    	type.setValue(1, 1, 10);
-        return type;
+    public PartialFuturableTestReturnType doPartialWorkWithUserDefinedExecutor(PartialFuturableTestReturnType input, PartialFuturableTestReturnType proxiedOutput) throws InterruptedException {
+    	proxiedOutput.setValue(1, 1, 10);
+        return proxiedOutput;
     }
 }

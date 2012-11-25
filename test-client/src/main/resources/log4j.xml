@@ -23,6 +23,15 @@
 		</layout>
 	</appender>
 
+	<logger name="edu.buffalo.cse.cse605.project2">
+		<level value="WARN"/>
+	</logger>
+	
+	
+	<logger name="edu.buffalo.cse.cse605.project2.graphic">
+		<level value="WARN"/>
+	</logger>
+	
 	<!-- ======================= -->
 	<!-- Setup the Root category -->
 	<!-- ======================= -->
