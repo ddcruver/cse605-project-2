@@ -41,7 +41,7 @@ public class PartialFuturableAspect {
         
         final Object realObject;
         
-        // If user provides an output container proxy it otherwise proxy the input containter.
+        // If user provides an output container proxy it otherwise proxy the input container.
         if(pjp.getArgs()[1] == null)
         	realObject = pjp.getArgs()[0];
         else
