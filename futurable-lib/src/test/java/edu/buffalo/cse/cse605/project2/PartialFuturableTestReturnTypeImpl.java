@@ -19,8 +19,11 @@ public class PartialFuturableTestReturnTypeImpl implements PartialFuturableTestR
 		matrix.put(x, y, value);
 	}
 
-	
-	
+	@Override
+	@PartialFuturableMarker
+	public void markValue(int x, int y) {
+		// Do nothing used mainly by futurable library to notify this "coordinate" is ready.
+	}
 
 
 }

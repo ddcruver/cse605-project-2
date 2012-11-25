@@ -8,4 +8,7 @@ public interface PartialFuturableTestReturnType {
 	
 	@PartialFuturableSetter
 	public void setValue(int x, int y, @FuturableValue double value);
+	
+	@PartialFuturableMarker
+	public void markValue(int x, int y);
 }

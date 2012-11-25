@@ -147,9 +147,9 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 		}
 
 		synchronized (hasCompleted) {
-			LOG.debug("Calling actual setter");
+			LOG.trace("Calling actual setter");
 			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
-			LOG.debug("Returning from actual setter");
+			LOG.trace("Returning from actual setter");
 			hasCompleted.set(Boolean.TRUE);
 			hasCompleted.notify();
 		}
@@ -168,9 +168,9 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 		}
 
 		synchronized (hasCompleted) {
-			LOG.debug("Calling actual marker");
+			LOG.trace("Calling actual marker");
 			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
-			LOG.debug("Returning from actual marker");
+			LOG.trace("Returning from actual marker");
 			hasCompleted.set(Boolean.TRUE);
 			hasCompleted.notify();
 		}
@@ -197,7 +197,7 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 			}
 			
 			if(operationComplete)
-				LOG.debug("Waking up because previous operation was completed.");
+				LOG.trace("Waking up because previous operation was completed.");
 			
 			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
 		}
