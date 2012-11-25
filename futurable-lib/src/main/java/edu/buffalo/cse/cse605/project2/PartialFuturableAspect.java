@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class PartialFuturableAspect {
     private static final transient Logger LOG = LoggerFactory.getLogger(PartialFuturableAspect.class);
@@ -18,9 +17,13 @@ public class PartialFuturableAspect {
 
     public Object interceptFuturableMethod(final ProceedingJoinPoint pjp) throws Throwable {
 
+    	final String className = pjp.getTarget().getClass().getCanonicalName();
         final MethodSignature signature = (MethodSignature) pjp.getStaticPart().getSignature();
-        Method method = signature.getMethod();
-        LOG.debug("Method: {}", method.getName());
+        final Method method = signature.getMethod();
+        final String methodName = method.getName();
+        
+        LOG.debug("Calling {}#{}", className, methodName);
+        
         PartialFuturable futurableAnnotation = method.getAnnotation(PartialFuturable.class);
         String executorName = futurableAnnotation.executor();
         
@@ -51,7 +54,7 @@ public class PartialFuturableAspect {
         final Object[] arguments = pjp.getArgs();
         arguments[1] = proxyObj;
         
-        final Future<Object> future = executor.submit(new Callable<Object>() {
+        executor.submit(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 try {
@@ -60,9 +63,13 @@ public class PartialFuturableAspect {
                     throw new ExecutionException(e);
                 } finally
                 {
+                	LOG.trace("Setting Operation Complete for {}#{}", className, methodName);
                 	partialInvoker.setOperationComplete();
+                	LOG.trace("Getting Target {}#{}", className, methodName);
                 	Object target = pjp.getTarget();
+                	LOG.trace("Trying to Casting PartialFuturableComplete {}#{}", className, methodName);
                 	PartialFuturableCompleted pfc = (PartialFuturableCompleted) target;
+                	LOG.trace("Setting PartialFuturableComplete to true {}#{}", className, methodName);
                 	pfc.setComplete(true);
                 }
             }

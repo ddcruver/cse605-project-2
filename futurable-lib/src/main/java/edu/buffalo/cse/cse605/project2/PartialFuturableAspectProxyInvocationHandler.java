@@ -53,11 +53,14 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 			
 		PartialFuturableGetter getter = method.getAnnotation(PartialFuturableGetter.class);
 		PartialFuturableSetter setter = method.getAnnotation(PartialFuturableSetter.class);
+		PartialFuturableMarker marker = method.getAnnotation(PartialFuturableMarker.class);
 	
 		if (getter != null) {
 			returnValue = handleGetter(realObject, method, methodObj, adjustedArgs);
 		} else if (setter != null) {
 			returnValue = handleSetter(realObject, method, methodObj, adjustedArgs);
+		} else if (marker != null) {
+			returnValue = handleMarker(realObject, method, methodObj, adjustedArgs);
 		} else {
 			returnValue = handleNormalMethod(realObject, method, methodObj, adjustedArgs);
 		}
@@ -128,8 +131,6 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 		final AtomicBoolean hasCompleted;
 		Object returnValue;
 
-		LOG.debug("Original call to Setter with Argument Hash: {}", argumentHash);
-
 		synchronized (hasCompletedMap) {
 			hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
 		}
@@ -138,6 +139,27 @@ public class PartialFuturableAspectProxyInvocationHandler implements InvocationH
 			LOG.debug("Calling actual setter");
 			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
 			LOG.debug("Returning from actual setter");
+			hasCompleted.set(Boolean.TRUE);
+			hasCompleted.notify();
+		}
+
+		return returnValue;
+	}
+	
+	private Object handleMarker(Object realObject2, Method method, Method methodObj, Object[] adjustedArgs) {
+		
+		String argumentHash = getArugumentHash(method, adjustedArgs);
+		final AtomicBoolean hasCompleted;
+		Object returnValue;
+
+		synchronized (hasCompletedMap) {
+			hasCompleted = getCompletedState(argumentHash, Boolean.FALSE);
+		}
+
+		synchronized (hasCompleted) {
+			LOG.debug("Calling actual marker");
+			returnValue = utility.executeMethod(realObject, methodObj, adjustedArgs);
+			LOG.debug("Returning from actual marker");
 			hasCompleted.set(Boolean.TRUE);
 			hasCompleted.notify();
 		}

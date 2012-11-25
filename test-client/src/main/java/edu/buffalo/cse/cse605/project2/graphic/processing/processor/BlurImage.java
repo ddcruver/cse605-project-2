@@ -8,12 +8,10 @@ import edu.buffalo.cse.cse605.project2.graphic.processing.Image;
 import edu.buffalo.cse.cse605.project2.graphic.processing.ImageUtil;
 
 public class BlurImage {
-	private static final transient Logger LOG = LoggerFactory
-			.getLogger(BlurImage.class);
+	private static final transient Logger LOG = LoggerFactory.getLogger(BlurImage.class);
 
 	@PartialFuturable
-	public Image blurImage(Image in, Image out, int blurRadius)
-			throws InterruptedException {
+	public Image blurImage(Image in, Image out, int blurRadius) throws InterruptedException {
 
 		int height = in.getHeight();
 		int width = in.getWidth();
