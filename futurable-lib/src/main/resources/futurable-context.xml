@@ -7,21 +7,20 @@
 
     <bean id="defaultFuturablePool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"
           lazy-init="true">
-        <property name="corePoolSize" value="5"/>
-        <property name="maxPoolSize" value="10"/>
-        <property name="queueCapacity" value="2500"/>
+        <property name="corePoolSize" value="#{systemProperties['coreSize']}"/>
+        <property name="maxPoolSize" value="#{systemProperties['maxSize']}"/>
     </bean>
 
-	<bean id="futurableUtil" class="edu.buffalo.cse.cse605.project2.FuturableUtil">
-		<property name="defaultExecutor" ref="defaultFuturablePool"/>
-	</bean>
-	
+    <bean id="futurableUtil" class="edu.buffalo.cse.cse605.project2.FuturableUtil">
+        <property name="defaultExecutor" ref="defaultFuturablePool"/>
+    </bean>
+
     <bean id="aspect" class="edu.buffalo.cse.cse605.project2.FuturableAspect">
         <property name="futurableUtil" ref="futurableUtil"/>
     </bean>
-    
+
     <bean id="partialFuturableAspect" class="edu.buffalo.cse.cse605.project2.PartialFuturableAspect">
-    	<property name="futurableUtil" ref="futurableUtil"/>
+        <property name="futurableUtil" ref="futurableUtil"/>
     </bean>
 
     <aop:config>
@@ -35,10 +34,11 @@
                           expression="execution(@edu.buffalo.cse.cse605.project2.FuturableQueue java.util.Queue *.*(..))"/>
             <aop:around pointcut-ref="queuePoint" method="interceptFuturableQueue"/>
         </aop:aspect>
-        
+
         <aop:aspect ref="partialFuturableAspect">
-        	<aop:pointcut id="partialPoint" expression="execution(@edu.buffalo.cse.cse605.project2.PartialFuturable * *.*(..)))"/>
-        	<aop:around pointcut-ref="partialPoint" method="interceptFuturableMethod"/>
+            <aop:pointcut id="partialPoint"
+                          expression="execution(@edu.buffalo.cse.cse605.project2.PartialFuturable * *.*(..)))"/>
+            <aop:around pointcut-ref="partialPoint" method="interceptFuturableMethod"/>
         </aop:aspect>
     </aop:config>
 </beans>

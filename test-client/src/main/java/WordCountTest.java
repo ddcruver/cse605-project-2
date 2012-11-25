@@ -9,10 +9,7 @@ import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,22 +36,24 @@ public class WordCountTest {
     }
 
     private void singleThreadTiming() throws IOException {
-        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<Map<String, AtomicInteger>>();
+        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
         WordCountGenerator wordCountGenerator = new WordCountGenerator();
-        LOG.info("Begin file prcoessing.");
+        LOG.info("Begin file processing.");
+
         for (File file : files) {
             wordCounts.add(wordCountGenerator.generateWordCount(file));
             LOG.info("Processed file");
         }
-        LOG.info("End file prcoessing.");
+
+        LOG.info("End file processing.");
     }
 
     private void standardThreadPoolTiming() throws IOException {
         final ExecutorService tpe = Executors.newFixedThreadPool(128);
-        final Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<Map<String, AtomicInteger>>();
+        final Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
         final WordCountGenerator wordCountGenerator = new WordCountGenerator();
         final File[] files = getWikipediaFiles();
-        LOG.info("Begin file prcoessing.");
+        LOG.info("Begin file processing.");
 
         for (int i = 0; i < files.length; i++) {
             final int count = i;
@@ -71,13 +70,13 @@ public class WordCountTest {
             });
 
         }
-        LOG.info("End file prcoessing.");
+        LOG.info("End file precessing.");
     }
 
     private void futurableTiming() throws IOException {
         ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
         WordCountGenerator wordCountGenerator = context.getBean("wordCountGenerator", WordCountGenerator.class);
-        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<Map<String, AtomicInteger>>();
+        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
 
         LOG.info("Begin file processing");
 
@@ -86,7 +85,7 @@ public class WordCountTest {
             LOG.info("Processed file");
         }
         LOG.info("End file processing");
-        Map<String, AtomicInteger> finalMap = new HashMap<String, AtomicInteger>();
+        Map<String, AtomicInteger> finalMap = new HashMap<>();
 
         while (!wordCounts.isEmpty()) {
             System.out.println("Merging a map in");
@@ -100,7 +99,7 @@ public class WordCountTest {
     public void runWithQueue() throws IOException {
         Queue<Map<String, AtomicInteger>> wordCounts = compute();
         int processed = 0;
-        Map<String, AtomicInteger> finalMap = new HashMap<String, AtomicInteger>();
+        Map<String, AtomicInteger> finalMap = new HashMap<>();
         System.out.println("Enter test to see what is finished on queue");
         if (!wordCounts.isEmpty() && processed <= files.length / 2) {
             System.out.println("Merging a map in");
@@ -111,10 +110,10 @@ public class WordCountTest {
     }
 
     @FuturableQueue
-    private Queue compute() throws IOException {
+    private Queue<Map<String, AtomicInteger>> compute() throws IOException {
         ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
         WordCountGenerator wordCountGenerator = context.getBean("wordCountGenerator", WordCountGenerator.class);
-        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<Map<String, AtomicInteger>>();
+        Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
         for (File file : files) {
             wordCounts.add(wordCountGenerator.generateWordCount(file));
             System.out.println("Sent one out ... " + file.getName());
@@ -123,12 +122,15 @@ public class WordCountTest {
     }
 
 
-
-
     public File[] getWikipediaFiles() throws IOException {
         Resource resourceOne = new ClassPathResource(ALL_WIKIPEDIA_FILE_LOCATION);
-        resourceOne.getFile().listFiles();
-        return resourceOne.getFile().listFiles();
+        File[] files = resourceOne.getFile().listFiles();
+
+        assert files != null;
+
+        Arrays.sort(files);
+
+        return files;
     }
 
     private void merge(Map<String, AtomicInteger> a, Map<String, AtomicInteger> b) {
@@ -143,9 +145,4 @@ public class WordCountTest {
             atomicInteger.addAndGet(entry.getValue().get());
         }
     }
-
-    public int getTokenCount() {
-        return 0;
-    }
-
 }
