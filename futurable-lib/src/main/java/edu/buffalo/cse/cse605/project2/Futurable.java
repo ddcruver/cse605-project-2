@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Futurable {
-    String executor() default FuturableConstants.DEFAULT_TASK_EXECUTOR;
+public @interface Futurable
+{
+	String executor() default FuturableConstants.DEFAULT_TASK_EXECUTOR;
 }
