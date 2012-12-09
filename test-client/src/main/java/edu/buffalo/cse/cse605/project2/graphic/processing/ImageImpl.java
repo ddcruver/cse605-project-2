@@ -12,6 +12,15 @@ public class ImageImpl implements Image
 	private int width = 0;
 	private BufferedImage bImage;
 
+	public ImageImpl()
+	{
+	}
+
+	public ImageImpl(Image image)
+	{
+		bImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+	}
+
 	@Override
 	@PartialFuturableGetter
 	public int getPixel(int x, int y)

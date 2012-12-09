@@ -2,7 +2,6 @@ package edu.buffalo.cse.cse605.project2.graphic.processing;
 
 
 import edu.buffalo.cse.cse605.project2.graphic.processing.processor.*;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -14,14 +13,15 @@ import org.springframework.core.io.Resource;
 import java.io.File;
 import java.io.IOException;
 
-public class ImageProcessingRunner
+public class ImageProcessingRunnerWithFuturable
 {
-	private static final transient Logger LOG = LoggerFactory.getLogger(ImageProcessingRunner.class);
+	private static final transient Logger LOG = LoggerFactory.getLogger(ImageProcessingRunnerWithFuturable.class);
 
 	private static final String SPRING_CONTEXT_PATH = "graphic/image-processing-context.xml";
 
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
+		LOG.info("Starting");
 		ApplicationContext context = new ClassPathXmlApplicationContext(SPRING_CONTEXT_PATH);
 
 		Resource imageResource = new ClassPathResource("/graphic/apple.jpg");
@@ -36,23 +36,19 @@ public class ImageProcessingRunner
 		DelayFilter delayFilter = context.getBean(DelayFilter.class);
 		DegradeFilter degradeFilter = context.getBean(DegradeFilter.class);
 
-		LOG.debug("Degrading Image");
+		LOG.info("Degrading Image");
 		Image degradeImage = degradeFilter.process(image, null);
-
+		//LOG.info("Delaying Image");
 		//Image delayImage = delayFilter.delay(degradeImage, null, 100);
+		LOG.info("Blurring Image");
 		Image blurredImage = blurImageFilter.blurImage(degradeImage, null, 5);
-		Image delayImage2 = delayFilter.delay(degradeImage, null, 100);
-		Image greyScaleImage = greyScaleFilter.process(delayImage2, null, null);
+		//LOG.info("Delaying Image");
+		//Image delayImage2 = delayFilter.delay(degradeImage, null, 100);
+		LOG.info("Grey Scaling Image");
+		Image greyScaleImage = greyScaleFilter.process(blurredImage, null, null);
 
-		// Causes exception to be thrown
-		//Image blurredImageOut = new ImageImpl();
-		//Image blurredImage = blurImageFilter.blurImage(noOpImage, blurredImageOut, 5);
-
-		int snapshot = 0;
-		File outputFolder = new File("target/images/");
-		FileUtils.deleteQuietly(outputFolder);
-		Thread.sleep(2000);
-		outputFolder = new File("target/images/");
+		File outputFolder = new File("target/images1/");
+		outputFolder = new File("target/images1/");
 		outputFolder.mkdirs();
 
 		boolean done = false;
@@ -60,12 +56,14 @@ public class ImageProcessingRunner
 		do
 		{
 			done = greyScaleFilter.getComplete();
-			snapshot++;
-			File outputFile = new File(outputFolder, "apple-new-" + snapshot + ".png");
-			LOG.info("OutFile: {}", outputFile.getAbsolutePath());
-			loader.saveImage(greyScaleImage, outputFile);
-			Thread.sleep(2000);
 		} while (!done);
+
+		LOG.info("Done Transforming Image");
+
+		File outputFile = new File(outputFolder, "apple-new.png");
+		LOG.info("OutFile: {}", outputFile.getAbsolutePath());
+		loader.saveImage(greyScaleImage, outputFile);
+		LOG.info("Done");
 
 		((ConfigurableApplicationContext) context).close();
 	}
