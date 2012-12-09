@@ -15,6 +15,7 @@ public class NoOp extends SimplePartialFuturableCompleted implements ImageProces
 	@PartialFuturable
 	public <Integer> Image process(Image input, Image output, Integer argument) throws InterruptedException
 	{
+		LOG.debug("Did nothing");
 		return output;
 	}
 }
