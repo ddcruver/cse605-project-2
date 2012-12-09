@@ -7,9 +7,6 @@ import java.awt.image.BufferedImage;
 @FuturableReturnType(hashingMethod = HashingMethod.TO_STRING)
 public class ImageImpl implements Image
 {
-
-	private int height = 0;
-	private int width = 0;
 	private BufferedImage bImage;
 
 	public ImageImpl()
