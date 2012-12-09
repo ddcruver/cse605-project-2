@@ -5,12 +5,12 @@ import edu.buffalo.cse.cse605.project2.graphic.processing.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DelayFilter
+public class DegradeFilter
 {
-	private static final transient Logger LOG = LoggerFactory.getLogger(DelayFilter.class);
+	private static final transient Logger LOG = LoggerFactory.getLogger(GreyScale.class);
 
 	@PartialFuturable
-	public Image delay(Image in, Image out, int delay) throws InterruptedException
+	public Image process(Image in, Image out) throws InterruptedException
 	{
 		int height = in.getHeight();
 		int width = in.getWidth();
@@ -21,9 +21,9 @@ public class DelayFilter
 			{
 				LOG.debug("Copying {},{}", x, y);
 				int originalPixel = in.getPixel(x, y);
+				originalPixel = originalPixel & 0x00ABABAB;
 				out.setPixel(x, y, originalPixel);
 			}
-			Thread.sleep(delay);
 		}
 		return out;
 	}

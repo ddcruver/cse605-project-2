@@ -8,35 +8,35 @@
 <!-- ===================================================================== -->
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/"
-	debug="false">
+		debug="false">
 
 	<!-- ============================== -->
 	<!-- Append messages to the console -->
 	<!-- ============================== -->
 	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-		<param name="Target" value="System.out" />
-		<param name="Threshold" value="TRACE" />
+		<param name="Target" value="System.out"/>
+		<param name="Threshold" value="TRACE"/>
 
 		<layout class="org.apache.log4j.PatternLayout">
 			<!-- The default pattern: Date Priority [Category] Message\n -->
-			<param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n" />
+			<param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
 		</layout>
 	</appender>
 
 	<logger name="edu.buffalo.cse.cse605.project2">
-		<level value="WARN"/>
+		<level value="INFO"/>
 	</logger>
-	
-	
+
+
 	<logger name="edu.buffalo.cse.cse605.project2.graphic">
-		<level value="WARN"/>
+		<level value="INFO"/>
 	</logger>
-	
+
 	<!-- ======================= -->
 	<!-- Setup the Root category -->
 	<!-- ======================= -->
 	<root>
-		<priority value="DEBUG"/>
-		<appender-ref ref="CONSOLE" />
+		<priority value="WARN"/>
+		<appender-ref ref="CONSOLE"/>
 	</root>
 </log4j:configuration>

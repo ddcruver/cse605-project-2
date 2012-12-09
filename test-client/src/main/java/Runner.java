@@ -6,29 +6,31 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.List;
 
-public class Runner {
-	
+public class Runner
+{
+
 	private static final transient Logger LOG = LoggerFactory.getLogger(Runner.class);
-	
-    public static void main(String[] args) throws InterruptedException {
-    	LOG.info("Creating Application Context");
-        ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
 
-        InterceptAnnotationTest test = context.getBean("testAnnotationInterception", InterceptAnnotationTest.class);
+	public static void main(String[] args) throws InterruptedException
+	{
+		LOG.info("Creating Application Context");
+		ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
 
-        LOG.debug("Calling future method");
-        List<String> list = test.getList();
-        
-        LOG.debug("Returning from future method");
-        
-        LOG.info("Returned list: {}", list);
+		InterceptAnnotationTest test = context.getBean("testAnnotationInterception", InterceptAnnotationTest.class);
 
-        List<String> list2 = test.getOtherList();
-        
-        LOG.info("Other returned list: {}", list2);
-        
-        ((ConfigurableApplicationContext) context).close();
-        
-        LOG.debug("Runner Done");
-    }
+		LOG.debug("Calling future method");
+		List<String> list = test.getList();
+
+		LOG.debug("Returning from future method");
+
+		LOG.info("Returned list: {}", list);
+
+		List<String> list2 = test.getOtherList();
+
+		LOG.info("Other returned list: {}", list2);
+
+		((ConfigurableApplicationContext) context).close();
+
+		LOG.debug("Runner Done");
+	}
 }
