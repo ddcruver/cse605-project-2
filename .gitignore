@@ -3,3 +3,5 @@
 /.idea/*
 */test
 */test/**
+/target
+/project-2-parent.iml
