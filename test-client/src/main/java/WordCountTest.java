@@ -40,15 +40,15 @@ public class WordCountTest
 	private void singleThreadTiming() throws IOException
 	{
 		Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
-
+		OpenNlpProcessor textProcessor = new OpenNlpProcessor();
 		WordCountGenerator wordCountGenerator = new WordCountGenerator();
 		
 		LOG.info("Begin file processing.");
 
 		for (File file : files)
 		{
-			
-			wordCounts.add(wordCountGenerator.generateWordCount(file));
+			textProcessor.processDocument(file);
+			//wordCounts.add(wordCountGenerator.generateWordCount(file));
 			LOG.info("Processed file");
 		}
 
