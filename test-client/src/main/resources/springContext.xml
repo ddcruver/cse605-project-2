@@ -14,5 +14,7 @@
     <bean id="testAnnotationInterception" class="InterceptAnnotationTest"/>
 
     <bean id="wordCountGenerator" class="WordCountGenerator" />
+    
+    <bean id="textProcessor" class="OpenNlpProcessor" />
 
 </beans>

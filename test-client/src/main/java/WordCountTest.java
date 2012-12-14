@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WordCountTest
 {
-
 	private static final transient Logger LOG = LoggerFactory.getLogger(WordCountTest.class);
 	public static final String WIKIPEDIA_FILE_LOCATION = "wikipedia_2006_corpus/";
 	public static final String ALL_WIKIPEDIA_FILE_LOCATION = "all_wikipedia/";
@@ -41,11 +40,14 @@ public class WordCountTest
 	private void singleThreadTiming() throws IOException
 	{
 		Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
+
 		WordCountGenerator wordCountGenerator = new WordCountGenerator();
+		
 		LOG.info("Begin file processing.");
 
 		for (File file : files)
 		{
+			
 			wordCounts.add(wordCountGenerator.generateWordCount(file));
 			LOG.info("Processed file");
 		}
@@ -57,6 +59,8 @@ public class WordCountTest
 	{
 		final ExecutorService tpe = Executors.newFixedThreadPool(128);
 		final Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
+		final OpenNlpProcessor tokenGenerator = new OpenNlpProcessor();
+		
 		final WordCountGenerator wordCountGenerator = new WordCountGenerator();
 		final File[] files = getWikipediaFiles();
 		LOG.info("Begin file processing.");
@@ -71,7 +75,8 @@ public class WordCountTest
 				{
 					try
 					{
-						wordCounts.add(wordCountGenerator.generateWordCount(files[count]));
+						tokenGenerator.processDocument(files[count]);
+						//wordCounts.add(wordCountGenerator.generateWordCount(files[count]));
 						LOG.info("Processed file");
 					} catch (IOException e)
 					{
@@ -87,13 +92,16 @@ public class WordCountTest
 	{
 		ApplicationContext context = new ClassPathXmlApplicationContext("springContext.xml");
 		WordCountGenerator wordCountGenerator = context.getBean("wordCountGenerator", WordCountGenerator.class);
+		OpenNlpProcessor textProcessor = context.getBean("textProcessor", OpenNlpProcessor.class);
+		
 		Queue<Map<String, AtomicInteger>> wordCounts = new LinkedList<>();
 
 		LOG.info("Begin file processing");
 
 		for (File file : files)
 		{
-			wordCounts.add(wordCountGenerator.generateWordCount(file));
+			textProcessor.processDocument(file);
+			//wordCounts.add(wordCountGenerator.generateWordCount(file));
 			LOG.info("Processed file");
 		}
 		LOG.info("End file processing");
